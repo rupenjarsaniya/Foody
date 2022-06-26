@@ -10,6 +10,11 @@ const FoodState = (props) => {
     const [foodJson, setFoodJson] = useState([]);
     const [foodServe, setFoodServe] = useState([]);
     const [restaurantFood, setRestaurantFood] = useState([]);
+    const [cart, setCart] = useState({});
+    const [favcart, setFavcart] = useState({});
+    const [totalamount, setTotalamount] = useState(0);
+    const [discountamount, setDiscountamount] = useState(0);
+    const [deliverycharge, setDeliverycharge] = useState(0);
 
     // Restaurant
     // Get Owner
@@ -428,16 +433,113 @@ const FoodState = (props) => {
         setState(food);
     }
 
-    const getUserDetails = async () => {
-        const res = await getUserData();
-        if (res) {
-            return res;
+
+
+
+    // Cart and checkout
+
+    // Save cart to localstorage
+    const saveCart = (myCart) => {
+        localStorage.setItem("cart", JSON.stringify(myCart));
+        let subTotal = 0;
+        let disamount = 0;
+        let delicharge = 0;
+
+        let keys = Object.keys(myCart);
+        for (let index = 0; index < keys.length; index++) {
+            subTotal += myCart[keys[index]].qty * parseInt(myCart[keys[index]].price);
         }
-        return false;
+        setTotalamount(subTotal);
+
+        if (subTotal >= 500) {
+            disamount = subTotal * 5 / 100;
+        }
+        if (subTotal >= 1000) {
+            disamount = subTotal * (15 / 100);
+        }
+        if (subTotal >= 2000) {
+            disamount = subTotal * (25 / 100);
+        }
+        if (subTotal >= 4000) {
+            disamount = subTotal * (35 / 100);
+        }
+        setDiscountamount(disamount);
+
+        if (subTotal < 500) {
+            delicharge = 40;
+        }
+        setDeliverycharge(delicharge);
+    }
+
+    // Add to cart
+    const addToCart = (itemId, category, foodimg, hotel, foodname, price, qty) => {
+        let newCart = cart;
+
+        if (itemId in newCart) {
+            newCart[itemId].qty = newCart[itemId].qty + qty;
+        }
+        else {
+            newCart[itemId] = { category, foodimg, foodname, hotel, price, qty };
+        }
+
+        setCart(newCart);
+        saveCart(newCart);
+    }
+
+    // Remove from cart
+    const removeFromCart = (itemId, qty) => {
+        let newCart = cart;
+
+        if (itemId in newCart) {
+            newCart[itemId].qty = newCart[itemId].qty - qty;
+        }
+        if (newCart[itemId].qty <= 0) {
+            delete newCart[itemId]
+        }
+
+        setCart(newCart);
+        saveCart(newCart);
+    }
+
+    const clearCart = () => {
+        setCart({});
+        saveCart({});
+    }
+
+    // Add to favourite
+    const saveToFavourite = (myfavCart) => {
+        localStorage.setItem("favcart", JSON.stringify(myfavCart));
+    }
+
+    const addToFavourite = (itemId, category, foodimg, hotel, foodname, price, qty) => {
+        let newCart = favcart;
+
+        if (!(itemId in newCart)) {
+            newCart[itemId] = { category, foodimg, foodname, hotel, price, qty };
+        }
+        console.log(newCart);
+        saveToFavourite(newCart);
+        setFavcart(newCart);
+    }
+
+    const removeFromFavourite = (itemId) => {
+        let newCart = favcart;
+
+        if (itemId in newCart) {
+            delete newCart[itemId];
+        }
+
+        saveToFavourite(newCart);
+        setFavcart(newCart);
+    }
+
+    const clearFavourite = () => {
+        saveToFavourite({});
+        setFavcart({});
     }
 
     return (
-        <FoodContext.Provider value={{ addresses, foodJson, getUserData, addAddress, getAddress, deleteAddress, editAddress, editProfile, changePassword, getFoodDetils, getFoodLocal, getFavFoodLocal, orderFood, getOrders, getFood, foodServe, state, foodDone, getUserDetails, getOwnerData, restaurantFood, handleAddFood, handleUpdateFood, handleDeleteFood, getRestaurantFood }}>
+        <FoodContext.Provider value={{ saveCart, favcart, setCart, setFavcart, addToFavourite, removeFromFavourite, clearFavourite, addToCart, removeFromCart, clearCart, cart, totalamount, deliverycharge, discountamount, addresses, foodJson, getUserData, addAddress, getAddress, deleteAddress, editAddress, editProfile, changePassword, getFoodDetils, getFoodLocal, getFavFoodLocal, orderFood, getOrders, getFood, foodServe, state, foodDone, getOwnerData, restaurantFood, handleAddFood, handleUpdateFood, handleDeleteFood, getRestaurantFood }}>
             {props.children}
         </FoodContext.Provider>
     )

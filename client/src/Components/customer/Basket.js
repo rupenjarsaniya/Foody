@@ -51,7 +51,7 @@ const Basket = (props) => {
                                         state.map((basket) => {
                                             return (
                                                 <>
-                                                    <div className="cartBox">
+                                                    <div className="cartBox" key={basket.foodname}>
                                                         <div className="cartfoodname">{basket.foodname}</div>
                                                         <div>₹<span className="cartfoodprice">{basket.foodprice}</span></div>
                                                     </div>
@@ -65,7 +65,6 @@ const Basket = (props) => {
                         <div className="basketcartPrice">
                             <div className="basketprice">
                                 <p>₹
-
                                 </p>
                                 <h4 className="baskettotalprice"></h4>
                             </div>

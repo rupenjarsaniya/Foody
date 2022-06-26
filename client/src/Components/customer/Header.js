@@ -11,7 +11,7 @@ const Header = (props) => {
     const history = useHistory();
     const dispatch = useDispatch();
     const context = useContext(foodContext);
-    const { getOwnerData, getUserData } = context;
+    const { saveCart, getOwnerData, getUserData, setCart, setFavcart } = context;
 
     const userData = useSelector((state) => state.getUserReducer.userdata);
 
@@ -44,6 +44,12 @@ const Header = (props) => {
         }
         if (localStorage.getItem("token")) {
             getUserDetails();
+            let cart = JSON.parse(localStorage.getItem("cart"));
+            if (cart) { setCart(cart); saveCart(cart) }
+            else setCart({});
+            let favcart = JSON.parse(localStorage.getItem("favcart"));
+            if (favcart) setFavcart(favcart);
+            else setFavcart({});
         }
     }, []);
 

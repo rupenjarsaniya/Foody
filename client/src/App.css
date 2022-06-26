@@ -720,7 +720,9 @@
 #foodcounter .image h6 {
   padding-top: 1rem;
   text-transform: capitalize;
-  display: inline-block;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 #foodcounter .image .favicon {
@@ -729,8 +731,10 @@
   margin-left: 5px;
 }
 
-#foodcounter .image .favicon:hover {
+#foodcounter .image .favfavicon {
   color: red;
+  transition: 0.5s;
+  margin-left: 5px;
 }
 
 #foodcounter .image p {
@@ -744,16 +748,9 @@
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  padding-top: 1.5rem;
-  font-size: 0.7rem;
+  padding-top: 1rem;
+  font-size: 0.9rem;
   color: gray;
-}
-
-#foodcounter .fooddetail .rate {
-  background-color: var(--green);
-  color: white;
-  padding: 0.2rem 0.4rem;
-  border-radius: 2rem;
 }
 
 #foodcounter .add {
@@ -1351,6 +1348,21 @@
 #wish .image h6 {
   padding-top: 1rem;
   text-transform: capitalize;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#wish .image .favicon {
+  color: lightgray;
+  transition: 0.5s;
+  margin-left: 5px;
+}
+
+#wish .image .favfavicon {
+  color: red;
+  transition: 0.5s;
+  margin-left: 5px;
 }
 
 #wish .image p {
@@ -1584,6 +1596,21 @@
 
 #cart .itemcheckout .items .itemcart .edit {
   margin: 1rem 0;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  width: 100px;
+}
+
+#cart .itemcheckout .items .itemcart .qtyicon {
+  color: var(--green);
+  cursor: pointer;
+  font-size: 15px;
+  font-style: normal;
+}
+
+#cart .itemcheckout .itemcart .myqty {
+  font-size: 20px;
 }
 
 #cart .itemcheckout .btnplace {
@@ -1602,15 +1629,6 @@
   color: white;
 }
 
-#cart .itemcheckout .itemcart .myqty {
-  border: none;
-  outline: none;
-  padding: 0.1rem 1rem;
-  border-radius: 10px;
-  font-size: 1rem;
-  box-shadow: 0 0 3px 0 lightgray;
-  background-color: white;
-}
 
 #itemerror {
   display: flex;

@@ -1,39 +1,37 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 const Cartitems = (props) => {
-    const { foodname, foodrate, hotelname, foodimage, foodprice } = props.element;
-    const { addFavourite, deleteCart, index } = props;
+    ;
+    const { foodname, category, hotel, foodimg, price, qty } = props.element;
+    const { addToCart, addToFavourite, removeFromCart, index, item } = props;
     return (
         <div className="items" key={index + 1} id={index + 1}>
             <div className="row">
                 <div className="col-md-8">
                     <div className="itemdetail">
-                        <img src={foodimage} alt={foodname} className="itemimage" />
+                        <img src={foodimg} alt={foodname} className="itemimage" />
                         <div className="fooddetail">
-                            <h6 className="foodhotel">{hotelname}</h6>
+                            <h6 className="foodhotel">{hotel}</h6>
                             <p className="foodname">{foodname}</p>
-                            {/* <span className="rate">{foodrate}</span> */}
-                            <span>₹<span className="itemprice foodprice">{foodprice}</span></span>
+                            <span>₹<span className="itemprice foodprice">{price}</span></span>
                         </div>
                     </div>
                 </div>
                 <div className="col-md-4">
                     <div className="itemcart">
                         <div className="insertcart edit">
-                            <select name="qty" id={`qty${index + 1}`} className="myqty">
-                                <option value="1" selected>1</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                            </select>
+                            <i className="fa fa-minus-circle qtyicon" onClick={() => removeFromCart(item, 1)}></i>
+                            <span className="myqty">{qty}</span>
+                            <i className="fa fa-plus-circle qtyicon" onClick={() => addToCart(item, category, foodimg, hotel, foodname, price, 1)}></i>
                         </div>
                         <div className="editcartbuttons">
-                            <button type="button" className="btn-sm btn btnwish" onClick={() => { addFavourite(foodimage, foodname, hotelname, foodrate, foodprice) }}>Add to wishlist</button>
-                            <button type="button" className="btn-sm btn btnrm" onClick={() => { deleteCart(foodname) }}>Remove</button>
+                            <button type="button" className="btn-sm btn btnwish" onClick={() => { addToFavourite(item, category, foodimg, hotel, foodname, price, 1) }}>Add to wishlist</button>
+                            <button type="button" className="btn-sm btn btnrm" onClick={() => { removeFromCart(item, qty) }}>Remove</button>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     )
 };
 

@@ -9,181 +9,39 @@ import Cartitems from './Cartitems';
 const Cart = (props) => {
     const history = useHistory();
     const context = useContext(foodContext);
-    const { getFoodLocal, getAddress, addresses, getFavFoodLocal, orderFood, getUserDetails } = context;
-    const [cart, setCart] = useState([]);
+    const { addToCart, removeFromCart, clearCart, cart, addToFavourite, getFoodLocal, getAddress, addresses, getFavFoodLocal, orderFood, getUserDetails, totalamount, deliverycharge, discountamount } = context;
 
-    //---------------------------------------------------------- calculate ------------------------------------------------
-    const pricecal = async () => {
-        // Total price calculation
-        var price = document.querySelector(".price");
-        let myqty = document.querySelectorAll(".myqty");
-        let itemPrice = document.querySelectorAll(".itemprice");
+    const [coupen, setCoupen] = useState("");
+    const [coupenstatus, setCoupenstatus] = useState("");
+    const [coupenamount, setCoupenamount] = useState(0);
 
-        let itemPriceArray = [];
-        let qtyArray = [];
-        let cost = 0;
-
-        itemPrice.forEach(element => {
-            itemPriceArray.push(element);
-        });
-        myqty.forEach(function (element) {
-            qtyArray.push(element);
-        })
-
-        for (let i = 0; i < itemPriceArray.length; i++) {
-            cost = cost + (itemPriceArray[i].innerHTML * qtyArray[i].value);
-        }
-
-        price.innerHTML = cost;
-        for (let i = 0; i < myqty.length; i++) {
-            myqty[i].addEventListener('change', () => {
-                cost = 0;
-                itemPriceArray = [];
-                qtyArray = [];
-                pricecal();
-                return;
-            });
-        }
-
-        // Discount calculation
-        var discount = document.querySelector(".discount");
-        let disamount = 0;
-        if (price.innerHTML >= 500) {
-            disamount = price.innerHTML * 5 / 100;
-        }
-        if (price.innerHTML >= 1000) {
-            disamount = price.innerHTML * (15 / 100);
-        }
-        if (price.innerHTML >= 2000) {
-            disamount = price.innerHTML * (25 / 100);
-        }
-        if (price.innerHTML >= 4000) {
-            disamount = price.innerHTML * (35 / 100);
-        }
-        else {
-            discount.innerHTML = disamount;
-        }
-        discount.innerHTML = disamount;
-
-        // Delivery charge
-        var delivery = document.querySelector(".delivery");
-        let del = price.innerHTML - discount.innerHTML;
-        if (del < 500) {
-            delivery.innerHTML = 40;
-        }
-        else {
-            delivery.innerHTML = 0;
-        }
-        coupendiscoutcal();
-    }
-    const coupendiscoutcal = () => {
-        var coupen = document.getElementById("coupen");
-        var coupendiscount = document.querySelector(".coupendiscount");
-        var price = document.querySelector(".price");
-        var coupenstatus = document.getElementById("coupenstatus");
-        let correcthtml = `<p style="color:green;">Coupen Applied <i className="fa fa-check"></i></p>`;
-        let wronghtml = `<p style="color:red;">Invalid Coupen Code <i className="fa fa-times"></i></p>`;
-        if (coupen.value === "FIRST") {
-            coupendiscount.innerHTML = price.innerHTML * (10 / 100);
-            coupenstatus.innerHTML = correcthtml;
-        }
-        else if (coupen.value === "FOODY40") {
-            if (price.innerHTML < 500) {
-                coupendiscount.innerHTML = 0;
-                coupenstatus.innerHTML = wronghtml;
-            }
-            else {
-                coupendiscount.innerHTML = price.innerHTML * (40 / 100);
-                coupenstatus.innerHTML = correcthtml;
-            }
-        }
-        else if (coupen.value === "COOL200") {
-            if (price.innerHTML < 800) {
-                coupendiscount.innerHTML = 0;
-                coupenstatus.innerHTML = wronghtml;
-            }
-            else {
-                coupendiscount.innerHTML = "200";
-                coupenstatus.innerHTML = correcthtml;
-            }
-        }
-        else if (coupen.value === "SPRING30") {
-            if (price.innerHTML < 2000) {
-                coupendiscount.innerHTML = 0;
-                coupenstatus.innerHTML = wronghtml;
-            }
-            else {
-                coupendiscount.innerHTML = price.innerHTML * (30 / 100);
-                coupenstatus.innerHTML = correcthtml;
-            }
-        }
-        else if (coupen.value === "" || coupen.value === null) {
-            coupendiscount.innerHTML = 0;
-            coupenstatus.innerHTML = "";
-        }
-        else {
-            coupendiscount.innerHTML = 0;
-            coupenstatus.innerHTML = wronghtml;
-        }
-        final();
-    }
-    const final = async () => {
-        var finalamount = document.querySelector(".finalamount");
-        var saveamount = document.querySelector(".saveamount");
-        var price = document.querySelector(".price");
-        var discount = document.querySelector(".discount");
-        var delivery = document.querySelector(".delivery");
-        var coupendiscount = document.querySelector(".coupendiscount");
-        finalamount.innerHTML = parseInt(price.innerHTML) + parseInt(delivery.innerHTML) - parseInt(discount.innerHTML) - parseInt(coupendiscount.innerHTML);
-        saveamount.innerHTML = parseInt(price.innerHTML) - parseInt(finalamount.innerHTML) + parseInt(delivery.innerHTML);
-    }
-    const btnapply = () => {
-        visiblecoupens();
-        coupendiscoutcal();
-    }
-
-    //---------------------------------------------------------- Delete ------------------------------------------------
-    const deleteCart = async (foodname) => {
-        const getFoodCart = await getFoodLocal();
-        const cartArrFilter = getFoodCart.filter(element => element.foodname !== foodname);
-        localStorage.setItem("yourfood", JSON.stringify(cartArrFilter));
-        showCart();
-    }
-
-    //---------------------------------------------------------- Favourite ------------------------------------------------
-    const addFavourite = async (foodimage, foodname, hotelname, foodrate, foodprice) => {
-        // console.log(foodimage, foodname, hotelname, foodrate, foodprice);
-        if (typeof (Storage) !== "undefined") {
-            const localStorageFood = await getFavFoodLocal();
-
-            // Check if already in storage
-            for (let i = 0; i < localStorageFood.length; i++) {
-                if (localStorageFood[i].favfoodname === foodname) {
-                    alert(foodname + " Already In Wishlist");
-                    return;
-                }
-            }
-            const favouriteObj = {
-                favhotelname: hotelname,
-                favfoodname: foodname,
-                favfoodprice: foodprice,
-                favfoodimage: foodimage,
-                favfoodrate: foodrate,
-            }
-            // console.log(favouriteObj);
-            localStorageFood.push(favouriteObj);
-            localStorage.setItem("yourfavourite", JSON.stringify(localStorageFood));
-        }
-        else {
-            alert("Sorry, Your Browser Can't Support Web Storage");
-        }
-    }
-
-    //---------------------------------------------------------- coupen ------------------------------------------------
     const coupenApply = (e) => {
-        var coupen = document.getElementById("coupen");
-        coupen.value = e.target.getAttribute("data-name");
+        setCoupen(e.target.value);
+        let coupenvalue = e.target.value;
+        if (coupenvalue === "FIRST") {
+            setCoupenamount(totalamount * (10 / 100));
+            setCoupenstatus("Coupen Applied")
+        }
+        else if (coupenvalue === "FOODY40" && totalamount > 500) {
+            setCoupenamount((totalamount * (40 / 100)))
+            setCoupenstatus("Coupen Applied")
+        }
+        else if (coupenvalue === "COOL200" && totalamount > 800) {
+            setCoupenamount(200)
+            setCoupenstatus("Coupen Applied")
+        }
+        else if (coupenvalue === "SPRING30" && totalamount > 2000) {
+            setCoupenamount(totalamount * (30 / 100))
+            setCoupenstatus("Coupen Applied")
+        }
+        else {
+            coupenamount(0);
+            setCoupenstatus("Invalid Coupen Code");
+        }
     }
+
+    const btnapply = () => { }
+
     const showcoupens = () => {
         const coupenlist = document.getElementsByClassName("coupenlist")[0];
         coupenlist.style.display = "block";
@@ -227,14 +85,6 @@ const Cart = (props) => {
                 }
             }
         }
-    }
-
-    const showCart = async () => {
-        props.setloadingBar(50);
-        const localStorageFood = await getFoodLocal();
-        setCart(localStorageFood);
-        pricecal();
-        props.setloadingBar(100);
     }
 
     const [orderAddress, setOrderAddress] = useState("");
@@ -289,7 +139,6 @@ const Cart = (props) => {
         const handleFun = async () => {
             if (localStorage.getItem("token")) {
                 props.setloadingBar(50);
-                showCart();
                 getAddress();
             }
             else {
@@ -311,7 +160,7 @@ const Cart = (props) => {
                                 <div className="row">
                                     <div className="col-md-12">
                                         <div className="headercart">
-                                            <h5>My Cart ({cart.length})</h5>
+                                            <h5>My Cart ({Object.keys(cart).length})</h5>
                                             <input type="text" name="pincode" id="pincode" maxLength="6"
                                                 placeholder="Pincode" autoComplete="off" onChange={pincode} />
                                         </div>
@@ -321,17 +170,20 @@ const Cart = (props) => {
                                     <div className="col-md-12">
                                         <div id="item">
                                             {
-                                                cart.length === 0 ?
+                                                Object.keys(cart).length === 0 ?
                                                     <div id="itemerror">
                                                         <img src="/images/cart.png" />
                                                         <p>Your Cart is empty!</p>
                                                         <div>You have no food added in the cart.</div>
                                                         <button className="btn btnempty"><Link to="/">Add Food</Link></button>
-                                                    </div> : cart.map((element, index) => {
-                                                        return <> <Cartitems element={element} index={index} addFavourite={addFavourite} deleteCart={deleteCart} />
-                                                            <Button Button type="submit" variant="contained" className="btnplace" onClick={readyOrder}>place order</Button>
-                                                        </>
-                                                    })
+                                                    </div> : <> {
+                                                        Object.keys(cart).map((item, index) => {
+                                                            const element = cart[item];
+                                                            return <> <Cartitems element={element} item={item} index={index + 1} addToFavourite={addToFavourite} removeFromCart={removeFromCart} addToCart={addToCart} /></>
+                                                        })
+                                                    }
+                                                        <Button type="submit" variant="contained" className="btnplace" onClick={readyOrder}>place order</Button>
+                                                    </>
                                             }
                                         </div>
                                     </div>
@@ -345,13 +197,13 @@ const Cart = (props) => {
                                         <div className="coupenapply">
                                             <div className="coupentext">
                                                 <i className="fa fa-percent"></i>
-                                                <input type="text" name="coupen" id="coupen" placeholder="Apply Coupen" />
+                                                <input type="text" name="coupen" id="coupen" defaultValue={coupen} onChange={coupenApply} placeholder="Apply Coupen" />
                                             </div>
                                             <button type="button" className="btnapply" onClick={btnapply}>apply</button>
                                         </div>
                                         <div className="underline-bhk-gray"></div>
                                         <div className="coupeninfo">
-                                            <span id="coupenstatus"></span>
+                                            <span id="coupenstatus">{coupenstatus}</span>
                                             <div className="showcoupens" onClick={showcoupens}>View All Coupens</div>
                                             <div className="coupenlist">
                                                 <h5>Select Coupen</h5>
@@ -359,28 +211,28 @@ const Cart = (props) => {
                                                 <div className="underline-bhk-gray"></div>
                                                 <div className="offers">
                                                     <input type="radio" name="coupen" id="radioone" className="myRadio"
-                                                        data-name="FIRST" onChange={coupenApply} />
+                                                        value="FIRST" onChange={coupenApply} />
                                                     <h6>FIRST</h6><br />
                                                     <span>Flat 10% off on your first order</span>
                                                 </div>
                                                 <div className="underline-bhk-gray"></div>
                                                 <div className="offers">
                                                     <input type="radio" name="coupen" id="radiotwo" className="myRadio"
-                                                        data-name="FOODY40" onChange={coupenApply} />
+                                                        value="FOODY40" onChange={coupenApply} />
                                                     <h6>FOODY40</h6><br />
                                                     <span>Flat 40% off on your bill. Just add items above rs.500</span>
                                                 </div>
                                                 <div className="underline-bhk-gray"></div>
                                                 <div className="offers">
                                                     <input type="radio" name="coupen" id="radiothree" className="myRadio"
-                                                        data-name="COOL200" onChange={coupenApply} />
+                                                        value="COOL200" onChange={coupenApply} />
                                                     <h6>COOL200</h6><br />
                                                     <span>Flat rs. 200 off on your bill. Just add items above rs.800</span>
                                                 </div>
                                                 <div className="underline-bhk-gray"></div>
                                                 <div className="offers">
                                                     <input type="radio" name="coupen" id="radiofour" className="myRadio"
-                                                        data-name="SPRING30" onChange={coupenApply} />
+                                                        value="SPRING30" onChange={coupenApply} />
                                                     <h6>SPRING30</h6><br />
                                                     <span>Flat 30% off on your bill. Just add items above rs.2000</span>
                                                 </div>
@@ -394,28 +246,28 @@ const Cart = (props) => {
                                         <div className="underline-bhk-gray"></div>
                                         <div className="pricedetail">
                                             <label>Price</label>
-                                            <span className="price">0</span>
+                                            <span className="price">{totalamount}</span>
                                         </div>
                                         <div className="pricedetail">
                                             <label>Discount</label>
-                                            <span className="discount">0</span>
+                                            <span className="discount">{discountamount}</span>
                                         </div>
                                         <div className="pricedetail">
                                             <label>Coupen Discount</label>
-                                            <span className="coupendiscount">0</span>
+                                            <span className="coupendiscount">{coupenamount}</span>
                                         </div>
                                         <div className="pricedetail">
                                             <label>Delivery Charges <div className="info"><i className="fa fa-info-circle"></i><span className="deliveryinfo"> Free Delivery Order Above ₹500</span></div>
                                             </label>
-                                            <span className="delivery">0</span>
+                                            <span className="delivery">{deliverycharge}</span>
                                         </div>
                                         <div className="underline-dashed-gray"></div>
                                         <div className="pricedetail">
                                             <label>Total Amount</label>
-                                            <strong><span className="finalamount">0</span></strong>
+                                            <strong><span className="finalamount">{totalamount + deliverycharge - coupenamount - discountamount}</span></strong>
                                         </div>
                                         <div className="underline-dashed-gray"></div>
-                                        <div className="saving">You will save ₹<span className="saveamount">0</span> on this order</div>
+                                        <div className="saving">You will save ₹<span className="saveamount">{totalamount - (totalamount + deliverycharge - coupenamount - discountamount) + deliverycharge}</span> on this order</div>
                                     </div>
                                 </div>
                                 <div className="col-md-12 mt-3 mb-3">

@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
+import FavoriteIcon from '@material-ui/icons/Favorite';
 import StarRateIcon from '@material-ui/icons/StarRate';
 import foodContext from '../../context/foody/foodContext';
 import { Link, useHistory } from 'react-router-dom';
@@ -6,58 +7,12 @@ import { Link, useHistory } from 'react-router-dom';
 const Wishlist = (props) => {
     const history = useHistory();
     const context = useContext(foodContext);
-    const { getFavFoodLocal, getFoodLocal, getUserDetails } = context;
-    const [cart, setCart] = useState([]);
-
-    const deleteFavouriteCart = async (favfoodname) => {
-        const getFavFoodCart = await getFavFoodLocal();
-        const cartArrFilter = getFavFoodCart.filter(element => element.favfoodname !== favfoodname);
-        localStorage.setItem("yourfavourite", JSON.stringify(cartArrFilter));
-        showFavouriteCart();
-    }
-
-    const addtocart = async (favfoodimage, favhotelname, favfoodname, favfoodrate, favfoodprice) => {
-        if (typeof (Storage) !== "undefined") {
-            const localStorageFood = await getFoodLocal();
-            for (let i = 0; i < localStorageFood.length; i++) {
-                if (localStorageFood[i].foodname === favfoodname) {
-                    alert(favfoodname + " Already In Cart, Please Check Out There 😄");
-                    return;
-                }
-            }
-            const cartObj = {
-                hotelname: favhotelname,
-                foodname: favfoodname,
-                foodprice: favfoodprice,
-                foodimage: favfoodimage,
-                foodrate: favfoodrate,
-            }
-            localStorageFood.push(cartObj);
-            localStorage.setItem("yourfood", JSON.stringify(localStorageFood));
-        }
-        else {
-            alert("Sorry, Your Browser Can't Support Web Storage");
-        }
-    }
-
-    const showFavouriteCart = async () => {
-        props.setloadingBar(10);
-        const localStorageFavFood = await getFavFoodLocal();
-        setCart(localStorageFavFood);
-        props.setloadingBar(100);
-    }
+    const { favcart, addToFavourite, removeFromFavourite, clearFavourite, addToCart } = context;
+    console.log(favcart);
 
     useEffect(() => {
-        const handleGetUserData = async () => {
-            if (localStorage.getItem("token")) {
-                showFavouriteCart();
-            }
-            else {
-                history.push("/login");
-            }
-        }
         props.setloadingBar(10);
-        handleGetUserData();
+        if (!localStorage.getItem("token")) { history.push("/login"); }
         props.setloadingBar(100);
     }, [])
     return (
@@ -74,7 +29,7 @@ const Wishlist = (props) => {
                         <div className="col-12">
                             <div className="wishcarts">
                                 {
-                                    cart.length === 0 ? <>
+                                    Object.keys(favcart).length === 0 ? <>
                                         <div className="emptyContainer">
                                             <img src="images/empty.svg" alt="" className='emptyimage' />
                                             <p>Your Wishlist is Empty!</p>
@@ -82,22 +37,26 @@ const Wishlist = (props) => {
                                             <button className="btn btnwishempty"><Link to="/">Add Food To Wishlist</Link></button>
                                         </div>
                                     </> :
-                                        cart.map((food, index) => {
-                                            const { favfoodimage, favhotelname, favfoodname, favfoodrate, favfoodprice } = food;
+                                        Object.keys(favcart).map((item, index) => {
                                             return (
                                                 <div className="image" key={index + 1}>
-                                                    <img src={favfoodimage} alt="" />
-                                                    <h6 className="foodhotel">{favhotelname}</h6>
-                                                    <p className="foodname">{favfoodname}</p>
+                                                    <img src={favcart[item].foodimg} alt="" />
+                                                    <h6 className="foodhotel">{favcart[item].hotel}
+                                                        {
+                                                            item in favcart
+                                                                ? <FavoriteIcon className="favfavicon" onClick={() => { removeFromFavourite(item) }} />
+                                                                : <FavoriteIcon className="favicon" onClick={() => { addToFavourite(item, favcart[item].category, favcart[item].foodimg, favcart[item].hotel, favcart[item].foodname, favcart[item].price, 1) }} />
+                                                        }
+                                                    </h6>
+                                                    <p className="foodname">{favcart[item].foodname}</p>
                                                     <div className="fooddetail">
-                                                        <span className="rate"><StarRateIcon style={{ fontSize: "1.1rem", marginRight: "0.5rem" }} />{favfoodrate}</span>
                                                         <div>
-                                                            ₹<span className="foodprice">{favfoodprice}</span>
+                                                            ₹<span className="foodprice">{favcart[item].price}</span>
                                                         </div>
                                                     </div>
                                                     <div className="underline-bhk-gray"></div>
-                                                    <button type="button" className="add" onClick={() => { addtocart(favfoodimage, favhotelname, favfoodname, favfoodrate, favfoodprice) }}>Add</button>
-                                                    <button type="button" className="remove" onClick={() => { deleteFavouriteCart(favfoodname) }}>Remove</button>
+                                                    <button type="button" className="add" onClick={() => { addToCart(item, favcart[item].category, favcart[item].foodimg, favcart[item].hotel, favcart[item].foodname, favcart[item].price, favcart[item].qty) }}>Add</button>
+                                                    <button type="button" className="remove" onClick={() => { removeFromFavourite(item) }}>Remove</button>
                                                 </div>
                                             )
                                         })
