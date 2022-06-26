@@ -13,7 +13,7 @@ const Address = (props) => {
             <div className="address_detail">
                 <div className="row">
                     <div className="col-1">
-                        {place === "work" ? <HomeOutlinedIcon className="workicon" /> : <WorkOutlineOutlinedIcon className="workicon" />}
+                        {place !== "work" ? <HomeOutlinedIcon className="workicon" /> : <WorkOutlineOutlinedIcon className="workicon" />}
                     </div>
                     <div className="col-11">
                         <span className="location">{place}</span>

@@ -264,7 +264,7 @@ const Cart = (props) => {
             newElement.push(element);
         });
         if (!orderAddress) {
-            swal("Oops!", "Select Delivery Address and Try Again!", "error");
+            swal("Oops!", "Select Delivery Address and Try Again!", "warning");
             return;
         }
         props.setloadingBar(10);

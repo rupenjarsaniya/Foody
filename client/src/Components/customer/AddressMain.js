@@ -34,9 +34,13 @@ const AddressMain = (props) => {
             swal("Oops!", "Something went wrong please try again later", "error");
         }
         else {
+            setNewAddress({
+                house: "", societyname: "", landmark: "", city: "", pincode: "", place: ""
+            });
             props.setloadingBar(100);
             swal("Yeyyyy!", "New Address Added", "success");
         }
+        closeAddAddressSlide();
     }
 
     // Edit Address
@@ -64,7 +68,11 @@ const AddressMain = (props) => {
         else {
             props.setloadingBar(100);
             swal("Yeyyyy!", "Address Updated", "success");
+            setPrevAddress({
+                house: "", societyname: "", landmark: "", city: "", pincode: "", place: "", user: ""
+            });
         }
+        closeEditAddressSlide();
     }
 
     return (
@@ -75,9 +83,11 @@ const AddressMain = (props) => {
                         <span className="addressbox_new" onClick={addAddressSlide}><AddIcon />Add Address</span>
                         <div className="address_primary">
                             {
-                                addresses.map((address, index) => {
-                                    return <Address address={address} key={index + 1} editAddressSlide={editAddressSlide} />
-                                })
+                                addresses.length !== 0
+                                    ? addresses.map((address, index) => {
+                                        return <Address address={address} key={index + 1} editAddressSlide={editAddressSlide} />
+                                    })
+                                    : <div className='noaddress'>No Address Found</div>
                             }
                         </div>
                         <div className="address_overly">
@@ -88,22 +98,22 @@ const AddressMain = (props) => {
                                 </div>
                                 <form method="post" className="myaddressform">
                                     <label htmlFor="house">house / flat no.</label>
-                                    <input type="text" name="house" value={prevAddress.house} onChange={onChangeEditAddress} className="myaddressinput" />
+                                    <input type="text" name="house" defaultValue={prevAddress.house} onChange={onChangeEditAddress} className="myaddressinput" />
                                     <label htmlFor="name">society / flat name</label>
-                                    <input type="text" name="name" value={prevAddress.societyname} onChange={onChangeEditAddress} className="myaddressinput" />
+                                    <input type="text" name="name" defaultValue={prevAddress.societyname} onChange={onChangeEditAddress} className="myaddressinput" />
                                     <label htmlFor="landmark">landmark</label>
-                                    <input type="text" name="landmark" value={prevAddress.landmark} onChange={onChangeEditAddress} className="myaddressinput" />
+                                    <input type="text" name="landmark" defaultValue={prevAddress.landmark} onChange={onChangeEditAddress} className="myaddressinput" />
                                     <label htmlFor="city">City</label>
-                                    <input type="text" name="city" value={prevAddress.city} onChange={onChangeEditAddress} className="myaddressinput" />
+                                    <input type="text" name="city" defaultValue={prevAddress.city} onChange={onChangeEditAddress} className="myaddressinput" />
                                     <label htmlFor="pincode">Pincode</label>
-                                    <input type="text" name="pincode" value={prevAddress.pincode} onChange={onChangeEditAddress} className="myaddressinput" />
+                                    <input type="text" name="pincode" defaultValue={prevAddress.pincode} onChange={onChangeEditAddress} className="myaddressinput" />
                                     <div className="place">
                                         <label className="myRadioLabel">
-                                            <input type="radio" name="place" value="home" onChange={onChangeEditAddress} required />
+                                            <input type="radio" name="place" onChange={onChangeEditAddress} required />
                                             <span><HomeOutlinedIcon /> Home</span>
                                         </label>
                                         <label className="myRadioLabel">
-                                            <input type="radio" name="place" value="work" onChange={onChangeEditAddress} required />
+                                            <input type="radio" name="place" onChange={onChangeEditAddress} required />
                                             <span><WorkOutlineOutlinedIcon /> Work</span>
                                         </label>
                                     </div>
@@ -119,15 +129,15 @@ const AddressMain = (props) => {
                                 </div>
                                 <form method="post" className="mynewaddressform">
                                     <label htmlFor="house">house / flat no.</label>
-                                    <input type="text" name="house" className="mynewaddressinput" onChange={onChangeNewAddress} />
+                                    <input type="text" name="house" className="mynewaddressinput" defaultValue={newaddress.house} onChange={onChangeNewAddress} />
                                     <label htmlFor="name">society / flat name</label>
-                                    <input type="text" name="societyname" className="mynewaddressinput" onChange={onChangeNewAddress} />
+                                    <input type="text" name="societyname" className="mynewaddressinput" defaultValue={newaddress.societyname} onChange={onChangeNewAddress} />
                                     <label htmlFor="landmark">landmark</label>
-                                    <input type="text" name="landmark" className="mynewaddressinput" onChange={onChangeNewAddress} />
+                                    <input type="text" name="landmark" className="mynewaddressinput" defaultValue={newaddress.landmark} onChange={onChangeNewAddress} />
                                     <label htmlFor="city">City</label>
-                                    <input type="text" name="city" className="mynewaddressinput" onChange={onChangeNewAddress} />
+                                    <input type="text" name="city" className="mynewaddressinput" defaultValue={newaddress.city} onChange={onChangeNewAddress} />
                                     <label htmlFor="pincode">Pincode</label>
-                                    <input type="text" name="pincode" className="mynewaddressinput" onChange={onChangeNewAddress} />
+                                    <input type="text" name="pincode" className="mynewaddressinput" defaultValue={newaddress.pincode} onChange={onChangeNewAddress} />
                                     <div className="place">
                                         <label className="myRadioLabel">
                                             <input type="radio" name="place" value="home" onChange={onChangeNewAddress} />
@@ -139,6 +149,7 @@ const AddressMain = (props) => {
                                         </label>
                                     </div>
                                     <Button variant="contained" className="btn_newaddress" onClick={handleAddAddress}>Add Address</Button>
+                                    <Button type="reset" variant="contained">Clear</Button>
                                 </form>
                             </div>
                         </div>

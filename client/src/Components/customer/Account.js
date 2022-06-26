@@ -35,46 +35,29 @@ const userinfobox = (e) => {
     })
 }
 
-const editProfileSlider = () => document.getElementsByClassName("profile_overly")[0].classList.add("active_profile");
+const editProfileSlider = (firstname, lastname, email, phone) => {
+    document.getElementsByClassName("profile_overly")[0].classList.add("active_profile");
+}
 const closeProfileSlide = () => document.getElementsByClassName("profile_overly")[0].classList.remove("active_profile");
 
 const Account = (props) => {
     const history = useHistory();
     const dispatch = useDispatch();
     const context = useContext(foodContext);
-    const { logout, logoutall, getAddress, editProfile, getOrders, getUserDetails } = context;
+    const { getAddress, editProfile, getOrders } = context;
 
     const userdata = useSelector((state) => state.getUserReducer.userdata);
 
-    // Logout
-    const LogoutAll = async () => {
-        props.setloadingBar(10);
-        const confirm = await logoutall();
-        props.setloadingBar(50);
-        if (confirm) {
-            dispatch(logoutUser());
-            props.setloadingBar(75);
-            history.push("/login");
-            props.setloadingBar(100);
-        }
-    }
-
-    const LogoutUser = async () => {
-        props.setloadingBar(10);
-        const confirm = await logout();
-        props.setloadingBar(50);
-        if (confirm) {
-            dispatch(logoutUser());
-            props.setloadingBar(75);
-            history.push("/login");
-            props.setloadingBar(100);
-        }
-    }
-
     // Account
-    const [updateAccount, setUpdateAccount] = useState({ firstname: "", lastname: "", email: "", phone: "", age: "" });
+
+    const [updateAccount, setUpdateAccount] = useState({ firstname: "", lastname: "", email: "", phone: "" });
 
     const updateProfile = (e) => setUpdateAccount({ ...updateAccount, [e.target.name]: e.target.value });
+
+    const handleCurrentUserData = (firstname, lastname, email, phone) => {
+        setUpdateAccount({ firstname, lastname, email, phone });
+        editProfileSlider();
+    }
 
     const updateInfo = (e) => {
         e.preventDefault();
@@ -84,12 +67,22 @@ const Account = (props) => {
         props.setloadingBar(50);
         if (res) {
             swal("Yey!", "Your Profile Updated", "success");
+            closeProfileSlide();
             props.setloadingBar(100);
         }
         else {
             swal("Oops!", "Something went wrong please try again later", "error");
+            closeProfileSlide();
             props.setloadingBar(100);
         }
+    }
+
+    const LogoutUser = async () => {
+        props.setloadingBar(50);
+        localStorage.removeItem("token");
+        dispatch(logoutUser());
+        history.push("/login");
+        props.setloadingBar(100);
     }
 
     // Rating
@@ -186,7 +179,7 @@ const Account = (props) => {
                                                         </div>
                                                         <div className="order__orderstatusinfo">
                                                             <div className="order__total">
-                                                                <p className='order__deliverdate'>{element.ordertime}</p>
+                                                                <p className='order__deliverdate'>{new Date(element.ordertime).toLocaleString()}</p>
                                                                 <span className='order__subtotal'>₹ {element.subtotal}.00</span>
                                                             </div>
                                                         </div>
@@ -235,7 +228,7 @@ const Account = (props) => {
                                                     <div className="reviewinnerbox">
                                                         <h5 className='ratingHeading'>Give Us Suggestions</h5>
                                                         <form className='reviewForm'>
-                                                            <textarea name="review" onChange={setMsgState} placeholder='Whats the suggetions?' required>{msg}</textarea>
+                                                            <textarea name="review" defaultValue={msg} onChange={setMsgState} placeholder='Whats the suggetions?' required>{msg}</textarea>
                                                             <StarRatings
                                                                 rating={rating}
                                                                 starRatedColor="gold"
@@ -270,7 +263,7 @@ const Account = (props) => {
                                                         <p className="accountbox_email">{userdata.email}</p>
                                                         <span className="accountbox_span">Mobile</span>
                                                         <p className="accountbox_mobile">{userdata.phone}</p>
-                                                        <Button variant="outlined" className="accountbox_editprofie" onClick={editProfileSlider}>edit profile</Button>
+                                                        <Button variant="outlined" className="accountbox_editprofie" onClick={() => handleCurrentUserData(userdata.firstname, userdata.lastname, userdata.email, userdata.phone)}>edit profile</Button>
                                                     </div>
                                                     <div className="profile_overly">
                                                         <div className="profile_innerbox">
@@ -280,16 +273,14 @@ const Account = (props) => {
                                                             </div>
                                                             <form method="post" className="myprofileform">
                                                                 <label htmlFor="name">firstname</label>
-                                                                <input type="text" name="firstname" className="myprofileinput" onChange={updateProfile} />
+                                                                <input type="text" name="firstname" className="myprofileinput" defaultValue={updateAccount.firstname} onChange={updateProfile} />
                                                                 <label htmlFor="name">lastname</label>
-                                                                <input type="text" name="lastname" className="myprofileinput" onChange={updateProfile} />
+                                                                <input type="text" name="lastname" className="myprofileinput" defaultValue={updateAccount.lastname} onChange={updateProfile} />
                                                                 <label htmlFor="email">email</label>
-                                                                <input type="email" name="email" className="myprofileinput" onChange={updateProfile} />
+                                                                <input type="email" name="email" className="myprofileinput" defaultValue={updateAccount.email} onChange={updateProfile} />
                                                                 <label htmlFor="mobile">mobile</label>
-                                                                <input type="text" name="phone" className="myprofileinput" onChange={updateProfile} />
-                                                                <label htmlFor="age">age</label>
-                                                                <input type="text" name="age" className="myprofileinput" onChange={updateProfile} />
-                                                                <Button variant="contained" className="btn_profile" onClick={updateInfo}>change</Button>
+                                                                <input type="text" name="phone" className="myprofileinput" defaultValue={updateAccount.phone} onChange={updateProfile} />
+                                                                <Button variant="contained" className="btn_profile" onClick={updateInfo}>Update Profile</Button>
                                                             </form>
                                                         </div>
                                                     </div>
@@ -325,7 +316,6 @@ const Account = (props) => {
                                     <li><Link to="/wishlist">my wishlist</Link></li>
                                     <li><Link to="/newpassword">forgot password</Link></li>
                                     <li onClick={LogoutUser}><Link to="">logout</Link></li>
-                                    <li onClick={LogoutAll}><Link to="">logout all devices</Link></li>
                                     <li><Link to="/">help</Link></li>
                                 </ul>
                             </div>
