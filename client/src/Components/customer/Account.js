@@ -125,28 +125,23 @@ const Account = (props) => {
     useEffect(() => {
         const getUserDetailFun = async () => {
             try {
-                props.setloadingBar(10);
-                const res = await getUserDetails();
-                props.setloadingBar(30);
-                if (res) {
+                if (localStorage.getItem("token")) {
                     getAddress();
-                    props.setloadingBar(50);
                     const getOrderFun = async () => {
                         const order = await getOrders();
                         setOrders(order);
-                        props.setloadingBar(75);
                     };
                     getOrderFun();
-                    props.setloadingBar(100);
                 }
                 else {
                     history.push("/login");
-                    props.setloadingBar(100);
                 }
             }
             catch (error) { console.log(error); }
         }
+        props.setloadingBar(50);
         getUserDetailFun();
+        props.setloadingBar(100);
     }, []);
 
     useEffect(() => {
@@ -309,10 +304,7 @@ const Account = (props) => {
                                             <div className="further_primary">
                                                 <p className="further_header">🙂 Coming Soon...</p>
                                                 <ul className="further_worklist">
-                                                    <li>Some bugs will be solve</li>
-                                                    <li>Website's Review Box</li>
-                                                    <li>Order detail page</li>
-                                                    <li>Improve User Experience</li>
+                                                    <li>All set</li>
                                                 </ul>
                                             </div>
                                         </div>

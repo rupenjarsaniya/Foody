@@ -287,20 +287,18 @@ const Cart = (props) => {
 
     useEffect(() => {
         const handleFun = async () => {
-            props.setloadingBar(10);
-            const res = await getUserDetails();
-            if (res) {
+            if (localStorage.getItem("token")) {
                 props.setloadingBar(50);
                 showCart();
                 getAddress();
-                props.setloadingBar(100);
             }
             else {
                 history.push("/login");
-                props.setloadingBar(100);
             }
         }
+        props.setloadingBar(10);
         handleFun();
+        props.setloadingBar(100);
     }, []);
 
     return (
@@ -330,11 +328,12 @@ const Cart = (props) => {
                                                         <div>You have no food added in the cart.</div>
                                                         <button className="btn btnempty"><Link to="/">Add Food</Link></button>
                                                     </div> : cart.map((element, index) => {
-                                                        return <Cartitems element={element} index={index} addFavourite={addFavourite} deleteCart={deleteCart} />
+                                                        return <> <Cartitems element={element} index={index} addFavourite={addFavourite} deleteCart={deleteCart} />
+                                                            <Button Button type="submit" variant="contained" className="btnplace" onClick={readyOrder}>place order</Button>
+                                                        </>
                                                     })
                                             }
                                         </div>
-                                        <Button type="submit" variant="contained" className="btnplace" onClick={readyOrder}>place order</Button>
                                     </div>
                                 </div>
                             </div>
@@ -423,7 +422,7 @@ const Cart = (props) => {
                                     <div className="selectAddress_section">
                                         <h6>Select Address</h6>
                                         <div className="underline-bhk-gray"></div>
-                                        {
+                                        {addresses &&
                                             addresses.map((address, index) => {
                                                 const { city, house, landmark, pincode, place, societyname } = address;
                                                 return (

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import FoodContext from './foodContext'
 import { getUser } from '../../actions/index';
 import { useDispatch } from 'react-redux';
+import axios from 'axios';
 
 const FoodState = (props) => {
     const dispatch = useDispatch();
@@ -14,11 +15,12 @@ const FoodState = (props) => {
     // Get Owner
     const getOwnerData = async () => {
         try {
-            const res = await fetch("/owner", {
+            const res = await fetch("http://localhost:5000/owner", {
                 method: "GET",
                 headers: {
                     Accept: "application/json",
                     "Content-Type": "application/json",
+                    "token": localStorage.getItem("token")
                 }
             });
             const json = await res.json();
@@ -38,31 +40,29 @@ const FoodState = (props) => {
 
     // Add Food
     const handleAddFood = async (newFood) => {
-        const res = await fetch('/addfood', {
-            method: "POST",
+        const res = await axios.post("http://localhost:5000/addfood", newFood, {
             headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(newFood)
-        })
-        const json = await res.json();
+                "Content-Type": "multipart/form-data",
+                "token": localStorage.getItem("token")
+            }
+        });
+        console.log(res);
         if (res.status === 200) {
             setRestaurantFood([...restaurantFood, newFood]);
-            return { success: true, json };
+            return { success: true, json: res.data };
         }
-        else return { success: false, json };
+        else return { success: false, json: res.data };
     }
 
     // Update Food
-    const handleUpdateFood = async (currFood) => {
-        const res = await fetch('/updatefood/' + currFood.id, {
-            method: "PUT",
+    const handleUpdateFood = async (currFood, id) => {
+        console.log(id);
+        const res = await axios.put(`http://localhost:5000/updatefood/${id}`, currFood, {
             headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(currFood)
-        })
-        const json = await res.json();
+                "Content-Type": "multipart/form-data",
+                "token": localStorage.getItem("token")
+            }
+        });
         if (res.status === 200) {
             for (let index = 0; index < restaurantFood.length; index++) {
                 const element = restaurantFood[index];
@@ -76,17 +76,18 @@ const FoodState = (props) => {
                 }
             }
             setRestaurantFood(restaurantFood);
-            return { success: true, json };
+            return { success: true, json: res.data };
         }
-        else return { success: false, json };
+        else return { success: false, json: res.data };
     }
 
     // Delete Food
     const handleDeleteFood = async (id) => {
-        const res = await fetch('/deletefood/' + id, {
+        const res = await fetch('http://localhost:5000/deletefood/' + id, {
             method: "DELETE",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "token": localStorage.getItem("token")
             }
         })
         const json = await res.json();
@@ -100,10 +101,11 @@ const FoodState = (props) => {
 
     const getRestaurantFood = async () => {
         try {
-            const res = await fetch('/getrestaurantfood', {
+            const res = await fetch('http://localhost:5000/getrestaurantfood', {
                 method: "GET",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "token": localStorage.getItem("token")
                 }
             })
             const json = await res.json();
@@ -120,11 +122,12 @@ const FoodState = (props) => {
     // Get User
     const getUserData = async () => {
         try {
-            const res = await fetch("/user", {
+            const res = await fetch("http://localhost:5000/user", {
                 method: "GET",
                 headers: {
                     Accept: "application/json",
                     "Content-Type": "application/json",
+                    "token": localStorage.getItem("token")
                 }
             });
             const json = await res.json();
@@ -133,62 +136,23 @@ const FoodState = (props) => {
             }
             else {
                 return false;
-                // console.log("some error to get user data");
             }
         }
         catch (error) {
+            console.log(error);
             return false;
             // console.log("Error to get user information", error);
-        }
-    }
-
-    // Logout from current device
-    const logout = async (usertype) => {
-        let success = false;
-        try {
-            const res = await fetch("/logout/" + usertype, {
-                method: "POST",
-                header: {
-                    "Content-Type": "application/json"
-                }
-            })
-            if (res.status === 200) {
-                success = true;
-                return success;
-            }
-        }
-        catch (error) {
-            // console.log("Some error to get logout: " + error);
-        }
-    }
-
-    // Logout from all device
-    const logoutall = async (usertype) => {
-        let success = false;
-        try {
-            const logoutallGet = await fetch("/logoutall/" + usertype, {
-                method: "GET",
-                header: {
-                    "Content-Type": "application/json"
-                }
-            })
-            if (logoutallGet.status === 200) {
-                success = true;
-                return success;
-            }
-        }
-        catch (error) {
-            // console.log("Some error to logout all devices: " + error)
         }
     }
 
     // Add Address
     const addAddress = async (house, societyname, landmark, city, pincode, place) => {
         try {
-            const res = await fetch("/addaddress", {
+            const res = await fetch("http://localhost:5000/addaddress", {
                 method: "POST",
                 headers: {
-                    "Content-type": "application/json"
+                    "Content-type": "application/json",
+                    "token": localStorage.getItem("token")
                 },
                 body: JSON.stringify({ house, societyname, landmark, city, pincode, place })
             });
@@ -211,10 +175,11 @@ const FoodState = (props) => {
     // Get Address
     const getAddress = async () => {
         try {
-            const res = await fetch("/getaddress", {
+            const res = await fetch("http://localhost:5000/getaddress", {
                 method: "GET",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "token": localStorage.getItem("token")
                 }
             });
             const json = await res.json();
@@ -232,10 +197,11 @@ const FoodState = (props) => {
     // Delete Address
     const deleteAddress = async (id) => {
         try {
-            const res = await fetch(`/deleteaddress/${id}`, {
+            const res = await fetch(`http://localhost:5000/deleteaddress/${id}`, {
                 method: "DELETE",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "token": localStorage.getItem("token")
                 }
             });
             const json = await res.json();
@@ -255,10 +221,11 @@ const FoodState = (props) => {
     // Edit Address
     const editAddress = async (house, societyname, landmark, city, pincode, place, id) => {
         try {
-            const res = await fetch(`/updateaddress/${id}`, {
+            const res = await fetch(`http://localhost:5000/updateaddress/${id}`, {
                 method: "PUT",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "token": localStorage.getItem("token")
                 },
                 body: JSON.stringify({ house, societyname, landmark, city, pincode, place })
             });
@@ -293,9 +260,12 @@ const FoodState = (props) => {
     // Edit profile
     const editProfile = async (firstname, lastname, email, phone, age) => {
         try {
-            const res = await fetch("/updateuser", {
+            const res = await fetch("http://localhost:5000/updateuser", {
                 method: "PUT",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "token": localStorage.getItem("token")
+                },
                 body: JSON.stringify({ firstname, lastname, email, phone, age })
             });
             const json = await res.json();
@@ -317,10 +287,11 @@ const FoodState = (props) => {
     // Change password
     const changePassword = async (password, confirmpassword) => {
         try {
-            const res = await fetch(`/forgotpassword`, {
+            const res = await fetch(`http://localhost:5000/forgotpassword`, {
                 method: "PUT",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "token": localStorage.getItem("token")
                 },
                 body: JSON.stringify({ password, confirmpassword })
             });
@@ -340,10 +311,11 @@ const FoodState = (props) => {
     // Get fooddetails
     const getFoodDetils = async () => {
         try {
-            const res = await fetch("http://localhost:8000/foodDetailsJson", {
+            const res = await fetch("http://localhost:5000http://localhost:8000/foodDetailsJson", {
                 method: "GET",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "token": localStorage.getItem("token")
                 }
             });
             const json = await res.json();
@@ -352,7 +324,7 @@ const FoodState = (props) => {
             }
         }
         catch (error) {
-            // console.log("Food not fetch", error);
+            // console.log("Food not fetch",http://loc5lho0/login error);
         }
     }
 
@@ -386,10 +358,11 @@ const FoodState = (props) => {
     const orderFood = async (newElement, orderAddress, finalamount) => {
         let orderfood = false;
         try {
-            const res = await fetch("/orderfood", {
+            const res = await fetch("http://localhost:5000/orderfood", {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "token": localStorage.getItem("token")
                 },
                 body: JSON.stringify({ newElement, orderAddress, finalamount })
             });
@@ -413,10 +386,11 @@ const FoodState = (props) => {
     // Get user order
     const getOrders = async () => {
         try {
-            const res = await fetch("/getorder", {
+            const res = await fetch("http://localhost:5000/getorder", {
                 method: "GET",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "token": localStorage.getItem("token")
                 }
             });
             const json = await res.json();
@@ -432,7 +406,7 @@ const FoodState = (props) => {
     // Get food detail by city name
     const getFood = async () => {
         try {
-            const res = await fetch("/getFood", {
+            const res = await fetch("http://localhost:5000/getFood", {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json"
@@ -444,7 +418,7 @@ const FoodState = (props) => {
             }
         }
         catch (error) {
-            // console.log("Some error to fetch food detailb by city name");
+            // console.log("Some error to fetch fhttp:5/lot:3000/loginood detailb by city name");
         }
     }
 
@@ -463,7 +437,7 @@ const FoodState = (props) => {
     }
 
     return (
-        <FoodContext.Provider value={{ addresses, foodJson, getUserData, logout, logoutall, addAddress, getAddress, deleteAddress, editAddress, editProfile, changePassword, getFoodDetils, getFoodLocal, getFavFoodLocal, orderFood, getOrders, getFood, foodServe, state, foodDone, getUserDetails, getOwnerData, restaurantFood, handleAddFood, handleUpdateFood, handleDeleteFood, getRestaurantFood }}>
+        <FoodContext.Provider value={{ addresses, foodJson, getUserData, addAddress, getAddress, deleteAddress, editAddress, editProfile, changePassword, getFoodDetils, getFoodLocal, getFavFoodLocal, orderFood, getOrders, getFood, foodServe, state, foodDone, getUserDetails, getOwnerData, restaurantFood, handleAddFood, handleUpdateFood, handleDeleteFood, getRestaurantFood }}>
             {props.children}
         </FoodContext.Provider>
     )

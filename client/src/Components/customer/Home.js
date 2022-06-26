@@ -90,7 +90,10 @@ const Home = (props) => {
 
     useEffect(() => {
         props.setloadingBar(10);
-        const getFoodDetails = async () => await getFood();
+        const getFoodDetails = async () => {
+            const res = await getFood();
+            console.log(res);
+        }
 
         const getUserDetails = async () => {
             const res = await getUserData();

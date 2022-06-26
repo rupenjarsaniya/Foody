@@ -49,18 +49,16 @@ const Wishlist = (props) => {
 
     useEffect(() => {
         const handleGetUserData = async () => {
-            props.setloadingBar(10);
-            const res = await getUserDetails();
-            if (res) {
+            if (localStorage.getItem("token")) {
                 showFavouriteCart();
-                props.setloadingBar(100);
             }
             else {
                 history.push("/login");
-                props.setloadingBar(100);
             }
         }
+        props.setloadingBar(10);
         handleGetUserData();
+        props.setloadingBar(100);
     }, [])
     return (
         <>

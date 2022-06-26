@@ -33,22 +33,13 @@ const customerSchema = new mongoose.Schema({
     usertype: {
         type: String,
         require: true
-    },
-    tokens: [{
-        token: {
-            type: String,
-            require: true
-        }
-    }]
+    }
 });
 
 // Generate token
 customerSchema.methods.generateAuthToken = async function (req, res) {
     try {
-        const token = jwt.sign({ _id: this.id.toString() }, process.env.SECRET_KEY);
-        this.tokens = this.tokens.concat({ token: token });
-        await this.save();
-        return token;
+        return jwt.sign({ _id: this.id.toString() }, process.env.SECRET_KEY);
     }
     catch (error) {
         console.log("Some error to generate token " + error);

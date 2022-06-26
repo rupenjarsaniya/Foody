@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import Button from '@material-ui/core/Button';
 import { Link, useHistory } from 'react-router-dom';
 import foodContext from '../../context/foody/foodContext';
@@ -27,6 +27,12 @@ const Newpassword = (props) => {
             swal("Oops!", "Password Not Match With Confirm Password, Try Again!", "error");
         }
     }
+
+    useEffect(() => {
+        props.setloadingBar(50);
+        if (!localStorage.getItem("token")) history.push("/login");
+        props.setloadingBar(100);
+    }, []);
 
     return (
         <>

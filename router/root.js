@@ -1,5 +1,6 @@
 const express = require("express");
 const bcryptjs = require("bcrypt");
+const multer = require("multer");
 const router = express.Router();
 
 const Customer = require("../models/Customer");
@@ -10,57 +11,37 @@ const Review = require("../models/Review");
 const Owner = require("../models/Owner");
 const auth = require("../middleware/auth");
 
-// logout from current device
-router.post('/logout/:usertype', auth, async (req, res) => {
-    const usertype = req.params.usertype;
-    try {
-        if (usertype === "customer") {
-            const user = await Customer.findOne({ _id: req.userId });
-            if (!user) return res.status(400).json("User Not Found");
-            user.tokens = user.tokens.filter((currUser) => {
-                return currUser.token !== req.token;
-            })
-            res.clearCookie("Foody");
-            await user.save();
-            return res.status(200).json("Logout");
-        }
-        if (usertype === "restaurant") {
-            const user = await Owner.findOne({ _id: req.userId });
-            if (!user) return res.status(400).json("User Not Found");
-            user.tokens = user.tokens.filter((currUser) => {
-                return currUser.token !== req.token;
-            })
-            res.clearCookie("Foody");
-            await user.save();
-            return res.status(200).json("Logout");
-        }
-    }
-    catch (error) {
-        return res.status(400).json("Some error to logout", error);
+
+const DIR = './public/';
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, DIR);
+    },
+    filename: function (req, file, cb) {
+        const fileName = file.originalname.split(".");
+        cb(null, fileName[0] + Date.now() + Math.floor(Math.random(10)) + "." + fileName[1]);
     }
 });
 
-// Logout from all devices
-router.get('/logoutall/:usertype', auth, async (req, res) => {
-    const usertype = req.params.usertype;
-    try {
-        if (usertype === "customer") {
-            const user = await Customer.findOne({ _id: req.userId });
-            if (!user) return res.status(400).json("User Not Found");
+const upload = multer({
+    storage: storage,
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype === "image/png" || file.mimetype === "image/jpg" || file.mimetype === "image/jpeg") {
+            cb(null, true);
+        } else {
+            cb(null, false);
+            return res.status(400).json({ error: 'Only .png, .jpg and .jpeg format allowed!' });
         }
-        if (usertype === "restaurant") {
-            const user = await Owner.findOne({ _id: req.userId });
-            if (!user) return res.status(400).json("User Not Found");
-        }
-        res.clearCookie("Foody");
-        user.tokens = [];
-        await user.save();
-        return res.status(200).json("Logout All device successfully");
-    }
-    catch (error) {
-        return res.status(401).json("Some error to logout all devices", error);
     }
 });
+
+
+
+
+
+
+
 
 // Get current user details
 router.get("/user", auth, async (req, res) => {
@@ -83,63 +64,50 @@ router.post("/signup/:usertype", async (req, res) => {
     try {
         if (usertype === 'customer') {
             const { firstname, lastname, phone, email, password, confirmpassword } = req.body;
-            if (usertype !== "customer") return res.status(400).json('Please select customer to create an customer account');
+
+            // Check password and cofirm password are same or not
+            if (password !== confirmpassword) {
+                return res.status(400).json({ error: "Password not Match with Confirm Password, Check it!" });
+            }
+
             const findData = await Customer.findOne({ email });
             if (findData) {
                 return res.status(400).json({ error: "This Email Address is already in used" });
             }
 
-            // Check password and cofirm password are same or not
-            if (password !== confirmpassword) {
-                return res.status(400).json({ error: "Password not Match with Confirm Password, Check it!" });
-            }
-
             const registerCustomer = new Customer({ firstname, lastname, phone, email, password, confirmpassword, usertype });
 
             // Generate token
-            const tokenSignup = await registerCustomer.generateAuthToken();
-
-            // Store token in cookie
-            res.cookie("Foody", tokenSignup, {
-                httpOnly: true,
-                secure: true
-            });
+            const token = await registerCustomer.generateAuthToken();
 
             const registerSuccess = await registerCustomer.save();
             if (!registerSuccess) {
                 return res.status(400).json({ error: "Some error getting to create user account" });
             }
-            return res.status(200).json({ success: "Account created successfully" });
+            return res.status(200).json({ success: "Account created successfully", token });
         }
         if (usertype === "restaurant") {
-            const { ownername, hotelname, phone, email, password, confirmpassword } = req.body;
-            if (usertype !== "restaurant") return res.status(400).json('Please select owner to create an owner account');
-            const findData = await Owner.findOne({ email });
-            if (findData) {
-                return res.status(400).json({ error: "This Email Address is already in used" });
-            }
-
+            const { firstname, lastname, phone, email, password, confirmpassword } = req.body;
             // Check password and cofirm password are same or not
             if (password !== confirmpassword) {
                 return res.status(400).json({ error: "Password not Match with Confirm Password, Check it!" });
             }
 
-            const registerCustomer = new Owner({ ownername, hotelname, phone, email, password, confirmpassword, usertype });
+            const findData = await Owner.findOne({ email });
+            if (findData) {
+                return res.status(400).json({ error: "This Email Address is already in used" });
+            }
+
+            const registerCustomer = new Owner({ firstname, lastname, phone, email, password, confirmpassword, usertype });
 
             // Generate token
-            const tokenSignup = await registerCustomer.generateAuthToken();
-
-            // Store token in cookie
-            res.cookie("Foody", tokenSignup, {
-                httpOnly: true,
-                secure: true
-            });
+            const token = await registerCustomer.generateAuthToken();
 
             const registerSuccess = await registerCustomer.save();
             if (!registerSuccess) {
                 return res.status(400).json({ error: "Some error getting to create owner account" });
             }
-            return res.status(200).json({ success: "Owner account created successfully" });
+            return res.status(200).json({ success: "Owner account created successfully", token });
         }
     }
     catch (error) {
@@ -150,9 +118,11 @@ router.post("/signup/:usertype", async (req, res) => {
 // Login
 router.post("/login/:usertype", async (req, res) => {
     const { email, password } = req.body;
+    console.log(req.body);
     const usertype = req.params.usertype;
     try {
         if (usertype === 'customer') {
+            console.log("customer");
             // Find user by id
             const findData = await Customer.findOne({ email, usertype });
             if (!findData) {
@@ -167,19 +137,14 @@ router.post("/login/:usertype", async (req, res) => {
             }
 
             // Generate token
-            const tokenSignin = await findData.generateAuthToken();
+            const token = await findData.generateAuthToken();
             // console.log("Token Signin " + tokenSignin);
 
-            // Store token in cookie
-            res.cookie("Foody", tokenSignin, {
-                httpOnly: true,
-                secure: true
-            });
-
             // console.log("Login Successful");
-            return res.status(200).json({ findData, success: "Welcome back" });
+            return res.status(200).json({ findData, success: "Welcome back", token });
         }
         if (usertype === 'restaurant') {
+            console.log("restaurant");
             // Find user by id
             const findData = await Owner.findOne({ email, usertype });
             if (!findData) {
@@ -194,20 +159,15 @@ router.post("/login/:usertype", async (req, res) => {
             }
 
             // Generate token
-            const tokenSignin = await findData.generateAuthToken();
+            const token = await findData.generateAuthToken();
             // console.log("Token Signin " + tokenSignin);
 
-            // Store token in cookie
-            res.cookie("Foody", tokenSignin, {
-                httpOnly: true,
-                secure: true
-            });
-
             // console.log("Login Successful");
-            return res.status(200).json({ findData, success: "Welcome back Owner" });
+            return res.status(200).json({ findData, success: "Welcome back Owner", token });
         }
     }
     catch (error) {
+        console.log(error);
         // console.log("Some error getting in try catch while login, solve itSome error getting in try catch while login, solve it " + error);
         return res.status(400).json({ error: "Some error getting in try catch while login, solve it", error });
     }
@@ -217,10 +177,10 @@ router.post("/login/:usertype", async (req, res) => {
 router.put("/editowner", auth, async (req, res) => {
     console.log(req.body);
     try {
-        const { ownername, hotelname, email, phone } = req.body;
+        const { firstname, lastname, email, phone } = req.body;
         const updateObj = {};
-        if (ownername) { updateObj.ownername = ownername };
-        if (hotelname) { updateObj.hotelname = hotelname };
+        if (firstname) { updateObj.firstname = firstname };
+        if (lastname) { updateObj.lastname = lastname };
         if (email) { updateObj.email = email };
         if (phone) { updateObj.phone = phone };
 
@@ -445,7 +405,7 @@ router.get("/getorder", auth, async (req, res) => {
 router.get("/getFood", async (req, res) => {
     try {
         const findFood = await Food.find();
-        if (!findFood) return res.status(400).json({ error: "Something went wrong food not fetched" });
+        if (!findFood) return res.status(400).json({ error: "Something went wrong while fetching foods" });
         return res.status(200).json({ findFood });
     }
     catch (error) {
@@ -484,13 +444,14 @@ router.get("/review", async (req, res) => {
 })
 
 // Add Food
-router.post("/addfood", auth, async (req, res) => {
-    const { foodname, foodimg, hotel, price, category } = req.body;
+router.post("/addfood", auth, upload.single('foodimg'), async (req, res) => {
+    const { foodname, hotel, price, category } = req.body;
+    const url = req.protocol + '://' + req.get('host');
     try {
         const findFood = await Food.findOne({ foodname, hotel });
         if (findFood) return res.status(400).json("Food Is Already Serve From Your Restaurant");
 
-        const createFoodData = new Food({ foodname, foodimg: '/images/' + foodimg, hotel, price, category, user: req.userId });
+        const createFoodData = new Food({ foodname, foodimg: url + '/public/' + req.file.filename, hotel, price, category, user: req.userId });
 
         const saveFood = await createFoodData.save();
 
@@ -503,18 +464,19 @@ router.post("/addfood", auth, async (req, res) => {
 })
 
 // Update Food
-router.put("/updatefood/:id", auth, async (req, res) => {
+router.put("/updatefood/:id", auth, upload.single('foodimg'), async (req, res) => {
     const { foodname, foodimg, hotel, price, category } = req.body;
+    const url = req.protocol + '://' + req.get('host');
     try {
         let updateNoteObj = {};
         if (foodname) updateNoteObj.foodname = foodname;
-        if (foodimg) updateNoteObj.foodimg = foodimg;
+        if (req.file) updateNoteObj.foodimg = url + '/public/' + req.file.filename;
         if (hotel) updateNoteObj.hotel = hotel;
         if (price) updateNoteObj.price = price;
         if (category) updateNoteObj.category = category;
         if (Object.keys(updateNoteObj).length === 0) return res.status(400).json("Please Enter Updated Values");
 
-        const findFood = await Food.findById(req.params.id);
+        const findFood = await Food.findById({ _id: req.params.id });
         if (!findFood) return res.status(400).json("Food Detail Not Find");
 
         if (findFood.user.toString() !== req.userId.toString()) return res.status(400).json("Access Denied for update food");
@@ -524,6 +486,7 @@ router.put("/updatefood/:id", auth, async (req, res) => {
         return res.status(200).json("Food Udpated");
     }
     catch (error) {
+        console.log(error);
         return res.status(400).json("Some error to update food " + error);
     }
 })

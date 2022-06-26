@@ -4,11 +4,11 @@ const bcryptjs = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 const ownerSchema = new mongoose.Schema({
-    ownername: {
+    firstname: {
         type: String,
         require: true
     },
-    hotelname: {
+    lastname: {
         type: String,
         require: true
     },

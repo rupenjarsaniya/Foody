@@ -8,6 +8,7 @@ import EditOutlinedIcon from '@material-ui/icons/EditOutlined';
 import DeleteOutlineOutlinedIcon from '@material-ui/icons/DeleteOutlineOutlined';
 import IconButton from '@material-ui/core/IconButton';
 import CloseIcon from '@material-ui/icons/Close';
+const FormData = require('form-data');
 
 const FoodManagement = (props) => {
     // Default value checking
@@ -21,23 +22,44 @@ const FoodManagement = (props) => {
 
     const closeEditAddressSlide = () => document.getElementsByClassName("profile_overly")[0].classList.remove("active_profile");
 
-    const [profile, setProfile] = useState({ ownername: "", hotelname: "", email: "", phone: "" });
-
+    const [profile, setProfile] = useState({ firstname: "", lastname: "", email: "", phone: "" });
     const [userData, setUserData] = useState([]);
     const [newFood, setNewFood] = useState({ foodname: "", foodimg: "", hotel: "", price: "", category: "" });
     const [currFood, setCurrFood] = useState({ id: "", foodname: "", foodimg: "", hotel: "", price: "", category: "" });
 
-    const handleFood = (e) => setNewFood({ ...newFood, [e.target.name]: e.target.value });
+    const handleFood = (e) => {
+        if (e.target.name === "foodimg") {
+            setNewFood({ ...newFood, [e.target.name]: e.target.files[0] });
+        }
+        else {
+            setNewFood({ ...newFood, [e.target.name]: e.target.value });
+        }
+    }
+
     const handleEditFood = (id, foodname, foodimg, hotel, price, category) => {
         setCurrFood({ id, foodname, foodimg, hotel, price, category });
         updateBox.current.click();
     }
-    const handleSetFood = (e) => setCurrFood({ ...currFood, [e.target.name]: e.target.value });
+    const handleSetFood = (e) => {
+        if (e.target.name === "foodimg") {
+            setCurrFood({ ...currFood, [e.target.name]: e.target.files[0] });
+        }
+        else {
+            setCurrFood({ ...currFood, [e.target.name]: e.target.value });
+        }
+    }
 
     // Add Food
     const handleAddFoodSubmit = async (e) => {
         e.preventDefault();
-        const res = await handleAddFood(newFood);
+        const foodform = new FormData();
+        foodform.set("foodname", newFood.foodname);
+        foodform.set("foodimg", newFood.foodimg);
+        foodform.set("hotel", newFood.hotel);
+        foodform.set("price", newFood.price);
+        foodform.set("category", newFood.category);
+
+        const res = await handleAddFood(foodform);
         if (res.success) {
             swal(res.json, "Food from your restaurant served now", "success");
             setNewFood({ foodname: "", foodimg: "", hotel: "", price: "", category: "" });
@@ -48,7 +70,14 @@ const FoodManagement = (props) => {
     // Update Food
     const handleUpdateFoodSubmit = async (e) => {
         e.preventDefault();
-        const res = await handleUpdateFood(currFood);
+        console.log(currFood.foodimg);
+        const ufoodform = new FormData();
+        ufoodform.set("foodname", currFood.foodname);
+        ufoodform.set("foodimg", currFood.foodimg);
+        ufoodform.set("hotel", currFood.hotel);
+        ufoodform.set("price", currFood.price);
+        ufoodform.set("category", currFood.category);
+        const res = await handleUpdateFood(ufoodform, currFood.id);
         if (res.success) {
             closeUpdateBox.current.click();
             setCurrFood({ id: "", foodname: "", foodimg: "", hotel: "", price: "", category: "" });
@@ -65,8 +94,8 @@ const FoodManagement = (props) => {
     }
 
     // Update Profile
-    const editAddressSlide = (ownername, hotelname, email, phone) => {
-        setProfile({ ownername, hotelname, email, phone });
+    const editAddressSlide = (firstname, lastname, email, phone) => {
+        setProfile({ firstname, lastname, email, phone });
         document.getElementsByClassName("profile_overly")[0].classList.add("active_profile");
     }
 
@@ -76,14 +105,17 @@ const FoodManagement = (props) => {
 
     const handleProfileUpdate = async (e) => {
         e.preventDefault();
-        const res = await fetch('/editowner', {
+        const res = await fetch('http://localhost:5000/editowner', {
             method: "PUT",
-            headers: { "Content-type": "application/json" },
+            headers: {
+                "Content-type": "application/json",
+                "token": localStorage.getItem("token")
+            },
             body: JSON.stringify(profile)
         })
         const json = await res.json();
         if (res.status === 200) {
-            setProfile({ ownername: "", hotelname: "", email: "", phone: "", id: "" });
+            setProfile({ firstname: "", lastname: "", email: "", phone: "", id: "" });
             closeEditAddressSlide();
             setUserData(json.updateOwner);
             dispatch(getUser(json.updateOwner));
@@ -95,11 +127,9 @@ const FoodManagement = (props) => {
     }
 
     useEffect(() => {
-        props.setloadingBar(50);
         const getUserDetails = async () => {
-            const res = await getOwnerData();
-            if (res) {
-                props.setloadingBar(70);
+            if (localStorage.getItem("token")) {
+                const res = await getOwnerData();
                 dispatch(getUser(res));
                 setUserData(res);
                 getRestaurantFood();
@@ -108,6 +138,7 @@ const FoodManagement = (props) => {
                 history.push('/login');
             }
         }
+        props.setloadingBar(50);
         getUserDetails();
         props.setloadingBar(100);
     }, [])
@@ -122,17 +153,17 @@ const FoodManagement = (props) => {
                                 <form className='myAddFoodForm'>
                                     <h5 className='addHeading'>Add Food To Served With Us</h5>
                                     <input type="text" className='addFoodInput' name="foodname" placeholder='Food Name' defaultValue={newFood.foodname} onChange={handleFood} />
-                                    <input type="text" className='addFoodInput' name="foodimg" placeholder='Food Image' defaultValue={newFood.foodimg} onChange={handleFood} />
-                                    <input type="text" className='addFoodInput' name="hotel" placeholder='Hotel Name' defaultValue={newFood.hotel} onChange={handleFood} />
-                                    <select className='addFoodInput' name="category" onChange={handleFood}>
-                                        <option value="" disabled selected>Select Catagory</option>
+                                    <select className='addFoodInput' name="category" defaultValue={newFood.category} onChange={handleFood}>
+                                        <option value="" disabled>Select Catagory</option>
                                         <option value="Breakfast">Breakfast</option>
                                         <option value="Brunch">Brunch</option>
                                         <option value="Lunch">Lunch</option>
                                         <option value="Dinner">Dinner</option>
                                         <option value="Sweet">Sweet</option>
                                     </select>
-                                    <input type="text" className='addFoodInput' name="price" placeholder='Food Price' defaultValue={newFood.price} onChange={handleFood} />
+                                    <input type="text" className='addFoodInput' name="hotel" placeholder='Hotel Name' defaultValue={newFood.hotel} onChange={handleFood} />
+                                    <input type="text" className='addFoodInput' name="price" placeholder='Price' defaultValue={newFood.price} onChange={handleFood} />
+                                    <input type="file" name="foodimg" onChange={handleFood} />
                                     <button type="submit" className='addFoodBtn' onClick={handleAddFoodSubmit}>Serve</button>
                                 </form>
                             </div>
@@ -150,10 +181,8 @@ const FoodManagement = (props) => {
                                         </div>
                                         <div className="modal-body">
                                             <div className="updatefoodContainer">
-                                                <form>
+                                                <form className='myUpdateFoodForm'>
                                                     <input type="text" className='addFoodInput' name="foodname" placeholder='Food Name' defaultValue={currFood.foodname} onChange={handleSetFood} />
-                                                    <input type="text" className='addFoodInput' name="foodimg" placeholder='Food Image' defaultValue={currFood.foodimg} onChange={handleSetFood} />
-                                                    <input type="text" className='addFoodInput' name="hotel" placeholder='Hotel Name' defaultValue={currFood.hotel} onChange={handleSetFood} />
                                                     <select className='addFoodInput' name="category" defaultValue={currFood.category} onChange={handleSetFood}>
                                                         <option value="" disabled>Select Catagory</option>
                                                         <option value="Breakfast">Breakfast</option>
@@ -162,7 +191,9 @@ const FoodManagement = (props) => {
                                                         <option value="Dinner">Dinner</option>
                                                         <option value="Sweet">Sweet</option>
                                                     </select>
-                                                    <input type="text" className='addFoodInput' name="price" placeholder='Food Price' defaultValue={currFood.price} onChange={handleSetFood} />
+                                                    <input type="text" className='addFoodInput' name="hotel" placeholder='Hotel Name' defaultValue={currFood.hotel} onChange={handleSetFood} />
+                                                    <input type="text" className='addFoodInput' name="price" placeholder='Price' defaultValue={currFood.price} onChange={handleSetFood} />
+                                                    <input type="file" name="foodimg" onChange={handleSetFood} />
                                                 </form>
                                             </div>
                                         </div>
@@ -178,34 +209,33 @@ const FoodManagement = (props) => {
                                 <h5 className='diplayHeading'>There are {restaurantFood.length} Food Served From Your Restaurant.</h5>
                                 <div className="foodDisplayDetails">
                                     {
-                                        restaurantFood.map((food, index) => {
-                                            const { _id, foodname, foodimg, hotel, price, category } = food;
-                                            return <div className="cardDisplayContainer" key={index + 1}>
-                                                <img src={foodimg} className="foodImage" alt="..." />
+                                        restaurantFood.map(food => {
+                                            return <div className="cardDisplayContainer" key={food._id}>
+                                                <img src={food.foodimg} className="foodImage" alt="..." />
                                                 <div className="cardDisplay">
                                                     <table>
                                                         <tr>
                                                             <th>Food Name</th>
-                                                            <td>{foodname}</td>
+                                                            <td>{food.foodname}</td>
                                                         </tr>
                                                         <tr>
                                                             <th>Hotel Name</th>
-                                                            <td>{hotel}</td>
+                                                            <td>{food.hotel}</td>
                                                         </tr>
                                                         <tr>
                                                             <th>Price</th>
-                                                            <td>{price}</td>
+                                                            <td>{food.price}</td>
                                                         </tr>
                                                         <tr>
                                                             <th>Category</th>
-                                                            <td>{category}</td>
+                                                            <td>{food.category}</td>
                                                         </tr>
                                                     </table>
-                                                    <IconButton>
-                                                        <DeleteOutlineOutlinedIcon className='deleteBtn' onClick={() => { handleDeleteFoodFire(_id) }} />
+                                                    <IconButton onClick={() => { handleDeleteFoodFire(food._id) }}>
+                                                        <DeleteOutlineOutlinedIcon className='deleteBtn' />
                                                     </IconButton>
-                                                    <IconButton>
-                                                        <EditOutlinedIcon className='editBtn' onClick={() => { handleEditFood(_id, foodname, foodimg, hotel, price, category) }} />
+                                                    <IconButton onClick={() => { handleEditFood(food._id, food.foodname, food.foodimg, food.hotel, food.price, food.category) }}>
+                                                        <EditOutlinedIcon className='editBtn' />
                                                     </IconButton>
                                                 </div>
                                             </div>
@@ -221,24 +251,29 @@ const FoodManagement = (props) => {
                             <div className="accountContainer">
                                 <h5 className='profileHeading'>Profile</h5>
                                 <table>
-                                    <tr>
-                                        <th>Ownername</th>
-                                        <td>{userData.ownername}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Hotelname</th>
-                                        <td>{userData.hotelname}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Email Address</th>
-                                        <td>{userData.email}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Mobile No</th>
-                                        <td>{userData.phone}</td>
-                                    </tr>
+                                    <thead></thead>
+                                    <tbody>
+
+                                        <tr>
+                                            <th>firstname</th>
+                                            <td>{userData.firstname}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Lastname</th>
+                                            <td>{userData.lastname}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Email Address</th>
+                                            <td>{userData.email}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Mobile No</th>
+                                            <td>{userData.phone}</td>
+                                        </tr>
+                                    </tbody>
+                                    <tfoot></tfoot>
                                 </table>
-                                <button className='editProfileBtn' onClick={() => { editAddressSlide(userData.ownername, userData.hotelname, userData.email, userData.phone) }}>Edit Profile</button>
+                                <button className='editProfileBtn' onClick={() => { editAddressSlide(userData.firstname, userData.lastname, userData.email, userData.phone) }}>Edit Profile</button>
                             </div>
                         </div>
                     </div>
@@ -250,17 +285,17 @@ const FoodManagement = (props) => {
                             <p className="profile_heading">Edit Profile</p>
                         </div>
                         <form className="myprofileform">
-                            <label htmlFor="house">Owner Name</label>
-                            <input type="text" name="ownername" className="myprofileinput" defaultValue={profile.ownername} onChange={handleProfile} />
+                            <label htmlFor="house">First Name</label>
+                            <input type="text" name="firstname" className="myprofileinput" defaultValue={profile.firstname} onChange={handleProfile} />
+
+                            <label htmlFor="city">Last Name</label>
+                            <input type="text" name="lastname" className="myprofileinput" defaultValue={profile.lastname} onChange={handleProfile} />
 
                             <label htmlFor="name">Email Address</label>
                             <input type="email" name="email" className="myprofileinput" defaultValue={profile.email} onChange={handleProfile} />
 
                             <label htmlFor="landmark">Mobile No</label>
                             <input type="number" name="phone" className="myprofileinput" defaultValue={profile.phone} onChange={handleProfile} />
-
-                            <label htmlFor="city">Hotel Name</label>
-                            <input type="text" name="hotelname" className="myprofileinput" defaultValue={profile.hotelname} onChange={handleProfile} />
 
                             <button className="btn_profile" onClick={handleProfileUpdate}>save</button>
                         </form>

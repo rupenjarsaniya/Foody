@@ -11,16 +11,14 @@ const Header = (props) => {
     const history = useHistory();
     const dispatch = useDispatch();
     const context = useContext(foodContext);
-    const { getOwnerData, getUserData, logout } = context;
+    const { getOwnerData, getUserData } = context;
 
     const userData = useSelector((state) => state.getUserReducer.userdata);
 
     const LogoutUser = async () => {
-        const confirm = await logout(userData.usertype);
-        if (confirm) {
-            dispatch(logoutUser());
-            history.push("/login");
-        }
+        localStorage.removeItem("token");
+        dispatch(logoutUser());
+        history.push("/login");
     }
 
     const menubar = () => {
@@ -44,7 +42,9 @@ const Header = (props) => {
                 if (data) dispatch(getUser(data));
             }
         }
-        getUserDetails();
+        if (localStorage.getItem("token")) {
+            getUserDetails();
+        }
     }, []);
 
     return (
@@ -93,21 +93,19 @@ const Header = (props) => {
                                         </div>
                                         <ul className='navbarcontainer'>
                                             <li><Link to="/foodmanagement">Food Management</Link></li>
-                                            {
-                                                !userData.ownername ? <>
-                                                    <li><Link to="/login">Login</Link></li>
-                                                    <li><Link to="/signup">Signup</Link></li>
-                                                </> : <li onClick={LogoutUser}><Link to='/login'>Logout</Link></li>
-                                            }
+
+                                            <li onClick={LogoutUser}><Link to='/login'>Logout</Link></li>
+
                                             <li>
-                                                <Link to="/foodmanagement">
-                                                    <AccountCircleIcon />{userData.ownername ? userData.ownername : "My Account"}
+                                                <Link to="/foodmanagement" className='headerProfile'>
+                                                    <AccountCircleIcon /> {userData.firstname ? userData.firstname : "My Account"}
                                                 </Link>
                                             </li>
                                         </ul>
                                     </>
                                 }
-                                {userData.usertype === undefined &&
+                                {
+                                    userData.usertype === undefined &&
                                     <>
                                         <div className="menubar">
                                             <div className="hamburger-menu" onClick={menubar}>

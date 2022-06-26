@@ -68,6 +68,11 @@
   box-shadow: 3px 0 3px 0px lightgray;
 }
 
+#header .headerProfile{
+  display: flex;
+  align-items: center;
+}
+
 #header .headercontent {
   display: flex;
   flex-direction: row;
@@ -181,7 +186,7 @@
     display: flex;
   }
   #header .navbarcontainer {
-    background-color: rgb(0, 0, 0);
+    background-color: rgb(248, 248, 248);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -258,7 +263,7 @@
   display: flex;
   opacity: 1;
   animation: basketcart;
-  animation-timing-function: ease-out;
+  animation-timing-function: cubic-bezier(0.23, 1, 0.320, 1);
   animation-iteration-count: 1;
   animation-duration: 0.5s;
 }
@@ -709,7 +714,7 @@
 #foodcounter .image:hover .icon {
   display: block;
   z-index: 1;
-  animation: iconfav 0.5s ease-out;
+  animation: iconfav 0.5s cubic-bezier(0.23, 1, 0.320, 1);
 }
 
 #foodcounter .image h6 {
@@ -915,7 +920,6 @@
 .switchContainer {
   margin-bottom: 20px;
   display: flex;
-  align-items: center;
   justify-content: center;
 }
 
@@ -960,22 +964,6 @@
   text-align: center;
   font-weight: 700;
   color: var(--green);
-  animation-name: animated;
-  animation-iteration-count: infinite;
-  animation-duration: 10s;
-  animation-timing-function: ease;
-}
-
-@keyframes animated {
-  0% {
-    transform: rotate(0);
-  }
-  50% {
-    transform: rotateY(360deg);
-  }
-  100% {
-    transform: rotateY(0);
-  }
 }
 
 #login_content .header h3 {
@@ -1105,6 +1093,7 @@
   padding: 1rem 0;
   font-family: var(--font-classic);
   overflow-x: hidden;
+  height: calc(100vh - 62px);
 }
 
 #singup-content .header h6 {
@@ -1119,10 +1108,6 @@
 }
 
 #singup-content .header h3 {
-  /* animation-name: animated;
-    animation-iteration-count: infinite;
-    animation-duration: 10s;
-    animation-timing-function: ease; */
   color: var(--green);
   text-transform: capitalize;
   letter-spacing: 1px;
@@ -1298,6 +1283,10 @@
 
 /************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************ Wish ************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
 /****************************************** wish **************************************/
+#wish{
+  min-height: calc(100vh - 62px);
+}
+
 #wish .emptyContainer {
   text-align: center;
 }
@@ -1767,7 +1756,7 @@
 .showcoupen {
   display: block;
   animation-name: coupens;
-  animation-timing-function: ease-out;
+  animation-timing-function: cubic-bezier(0.23, 1, 0.320, 1);
   animation-iteration-count: 1;
   animation-duration: 0.2s;
 }
@@ -2346,7 +2335,7 @@
 
 .active_address .address_innerbox {
   animation: address;
-  animation-timing-function: ease-in-out;
+  animation-timing-function: cubic-bezier(0.23, 1, 0.320, 1);
   animation-iteration-count: 1;
   animation-duration: 0.5s;
 }
@@ -2467,7 +2456,7 @@
 
 .active_newaddress .newaddress_innerbox {
   animation: address;
-  animation-timing-function: ease-in-out;
+  animation-timing-function: cubic-bezier(0.23, 1, 0.320, 1);
   animation-iteration-count: 1;
   animation-duration: 0.5s;
 }
@@ -2570,7 +2559,7 @@
 
 .active_profile .profile_innerbox {
   animation: address;
-  animation-timing-function: ease-in-out;
+  animation-timing-function: cubic-bezier(0.23, 1, 0.320, 1);
   animation-iteration-count: 1;
   animation-duration: 0.3s;
 }
@@ -2853,6 +2842,7 @@
 .managementContainer {
   padding: 20px 0;
   background-color: rgb(247, 247, 247);
+  min-height: calc(100vh - 62px);
 }
 
 .foodControlContainer {
@@ -2870,6 +2860,29 @@
   padding: 37px 25px;
 }
 
+.myAddFoodForm > ::placeholder{
+  font-size: 14px;
+  color: rgb(184, 184, 184);
+}
+
+.myUpdateFoodForm input::file-selector-button,
+.myAddFoodForm input::file-selector-button{
+  width: 70%;
+  border: none;
+  border-bottom: 1px solid rgb(184, 184, 184);
+  border-radius: 4px;
+  padding: 10px 5px;
+  margin-bottom: 17px;
+  font-size: 14px;
+  outline: none;
+  transition: 0.4s;
+  background-color: #fff;
+}
+
+.modal-body{
+  background-color: rgb(252, 252, 252);
+}
+
 .addHeading {
   font-weight: 300;
   color: var(--green);
@@ -2881,7 +2894,7 @@
   border: none;
   border-bottom: 1px solid rgb(184, 184, 184);
   border-radius: 4px;
-  padding: 4px 5px;
+  padding: 10px 5px;
   margin-bottom: 17px;
   font-size: 14px;
   outline: none;
@@ -3094,11 +3107,11 @@
   top: 0;
   left: 0;
   background-color: rgba(0, 0, 0, 0.445);
-  width: 0;
+  width: 100%;
   height: 100vh;
   z-index: 1;
   position: fixed;
-  display: flex;
+  display: none;
   justify-content: flex-start;
   align-items: center;
   overflow: hidden;
@@ -3187,7 +3200,7 @@
 }
 
 .active_profile.profile_overly {
-  width: 100%;
+  display: flex;
 }
 
 .active_profile.profile_overly .profile_innerbox .myprofileform {
@@ -3196,7 +3209,7 @@
 
 .active_profile .profile_innerbox {
   animation: profile;
-  animation-timing-function: ease-in-out;
+  animation-timing-function: cubic-bezier(0.23, 1, 0.320, 1);
   animation-iteration-count: 1;
   animation-duration: 0.5s;
 }

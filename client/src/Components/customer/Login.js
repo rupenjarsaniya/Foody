@@ -9,7 +9,6 @@ import swal from 'sweetalert';
 const Login = (props) => {
     const dispatch = useDispatch();
     const context = useContext(foodContext);
-    const { getUserDetails } = context;
     document.title = "Foody - Login"
     const history = useHistory();
     const [usertype, setUserType] = useState("customer");
@@ -22,7 +21,7 @@ const Login = (props) => {
         e.preventDefault();
         props.setloadingBar(10);
         try {
-            const res = await fetch("/login/" + usertype, {
+            const res = await fetch("http://localhost:5000/login/" + usertype, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(userLogin)
@@ -30,7 +29,9 @@ const Login = (props) => {
             props.setloadingBar(50);
             const json = await res.json();
             if (res.status === 200 && json) {
+                console.log(json.findData);
                 dispatch(getUser(json.findData));
+                localStorage.setItem("token", json.token);
                 props.setloadingBar(75);
                 if (usertype === 'customer') {
                     history.push("/");
@@ -51,6 +52,11 @@ const Login = (props) => {
 
     const handleUsertype = e => e.target.checked ? setUserType("restaurant") : setUserType("customer");
 
+    useEffect(() => {
+        props.setloadingBar(50);
+        if (localStorage.getItem("token")) history.goBack();
+        props.setloadingBar(100);
+    }, []);
     return (
         <>
             <div id="login_content">
@@ -63,6 +69,7 @@ const Login = (props) => {
                                 </div>
                                 <div className="loginform">
                                     <form id="myLogin">
+
                                         <div className="switchContainer">
                                             <span className="userType">Customer</span>
                                             <div className="form-check form-switch innerswitchContainer">
