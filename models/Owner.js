@@ -21,10 +21,6 @@ const ownerSchema = new mongoose.Schema({
         type: String,
         require: true
     },
-    confirmpassword: {
-        type: String,
-        require: true
-    },
     phone: {
         type: Number,
         require: true,
@@ -60,9 +56,6 @@ ownerSchema.methods.generateAuthToken = async function (req, res) {
 ownerSchema.pre("save", async function (next) {
     if (this.isModified("password")) {
         this.password = await bcryptjs.hash(this.password, 10);
-        this.confirmpassword = await bcryptjs.hash(this.confirmpassword, 10);
-        console.log(this.password);
-        console.log(this.confirmpassword);
     }
     next();
 });

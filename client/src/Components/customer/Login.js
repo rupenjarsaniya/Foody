@@ -5,6 +5,7 @@ import { getUser } from '../../actions/index';
 import foodContext from '../../context/foody/foodContext';
 import { useDispatch } from 'react-redux';
 import swal from 'sweetalert';
+import LoginFormValidate from '../../validation/LoginFormValidate';
 
 const Login = (props) => {
     const dispatch = useDispatch();
@@ -12,27 +13,19 @@ const Login = (props) => {
     document.title = "Foody - Login"
     const history = useHistory();
     const [usertype, setUserType] = useState("customer");
-    const [userLogin, setUserLogin] = useState({ email: "", password: "" });
-    const userData = (e) => {
-        setUserLogin({ ...userLogin, [e.target.name]: e.target.value });
-    };
 
-    const exitUserData = async (e) => {
-        e.preventDefault();
-        props.setloadingBar(10);
+    const exitUserData = async () => {
+        props.setloadingBar(50);
         try {
             const res = await fetch("http://localhost:5000/login/" + usertype, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(userLogin)
+                body: JSON.stringify(values)
             });
-            props.setloadingBar(50);
             const json = await res.json();
             if (res.status === 200 && json) {
-                console.log(json.findData);
                 dispatch(getUser(json.findData));
                 localStorage.setItem("token", json.token);
-                props.setloadingBar(75);
                 if (usertype === 'customer') {
                     history.push("/");
                 }
@@ -49,6 +42,8 @@ const Login = (props) => {
         }
         props.setloadingBar(100);
     };
+
+    const { handleChange, values, errors, handleSubmit } = LoginFormValidate(exitUserData);
 
     const handleUsertype = e => e.target.checked ? setUserType("restaurant") : setUserType("customer");
 
@@ -68,7 +63,7 @@ const Login = (props) => {
                                     <h2>Login to FOODY</h2>
                                 </div>
                                 <div className="loginform">
-                                    <form id="myLogin">
+                                    <form id="myLogin" onSubmit={handleSubmit}>
 
                                         <div className="switchContainer">
                                             <span className="userType">Customer</span>
@@ -79,19 +74,23 @@ const Login = (props) => {
                                         </div>
 
                                         <div>
-                                            <label htmlFor="Email ID" className='is-valid'>Email ID<span className="required">*</span></label>
-                                            <input type="email" name="email" id="email" className="myInput" required="required" autoComplete="off" onChange={userData} />
-                                            <span className='invalid-feedback'>Email address is not valid</span>
+                                            <label htmlFor="Email ID" className='label'>Email ID<span className="required">*</span></label>
+                                            <input type="text" name="email" id="email" className="myInput" required="required" autoComplete="off" onChange={handleChange} />
+                                            {
+                                                errors.email && <p className='formErrorSpan'>{errors.email}</p>
+                                            }
                                         </div>
 
                                         <div>
-                                            <label htmlFor="Password" className='is-valid'>Password<span className="required">*</span></label>
-                                            <input type="password" name="password" id="password" className="myInput" required="required" autoComplete="off" onChange={userData} />
-                                            <span className='invalid-feedback'>Must have Uppercase, Lowercase, Number, Any Speacial character and length must be between 8 to 16</span>
+                                            <label htmlFor="Password" className='label'>Password<span className="required">*</span></label>
+                                            <input type="password" name="password" id="password" className="myInput" required="required" autoComplete="off" onChange={handleChange} />
+                                            {
+                                                errors.password && <p className='formErrorSpan'>{errors.password}</p>
+                                            }
                                         </div>
 
                                         <p className="forgot"><Link to="/">Forgot Password?</Link></p>
-                                        <Button size="small" type="submit" variant="contained" className="btnsubmit" onClick={exitUserData}>Login</Button>
+                                        <Button size="small" type="submit" variant="contained" className="btnsubmit">Login</Button>
                                         <p className="signup">New At Foody? <Link to="./signup">Signup Here!</Link></p>
                                     </form>
                                 </div>

@@ -6,6 +6,7 @@ import foodContext from '../../context/foody/foodContext';
 import { useDispatch } from 'react-redux';
 import swal from 'sweetalert';
 import { useEffect } from 'react';
+import SignupFormValidate from '../../validation/SignupFormValidate';
 
 const Signup = (props) => {
     // When useContext is use then form's useState not working
@@ -15,45 +16,7 @@ const Signup = (props) => {
     const history = useHistory();
     const [usertype, setUsertype] = useState("customer");
 
-    const [newuser, setNewuser] = useState({
-        firstname: "",
-        lastname: "",
-        email: "",
-        phone: "",
-        password: "",
-        confirmpassword: "",
-        usertype: usertype
-    });
-
-    const [newRestaurant, setNewRestaurant] = useState({
-        ownername: "",
-        hotelname: "",
-        email: "",
-        phone: "",
-        password: "",
-        confirmpassword: "",
-        usertype: usertype
-    });
-
     const handleUsertype = e => {
-        setNewRestaurant({
-            ownername: "",
-            hotelname: "",
-            email: "",
-            phone: "",
-            password: "",
-            confirmpassword: "",
-            usertype: usertype
-        });
-        setNewuser({
-            firstname: "",
-            lastname: "",
-            email: "",
-            phone: "",
-            password: "",
-            confirmpassword: "",
-            usertype: usertype
-        });
         if (e.target.checked) {
             setUsertype("restaurant");
         }
@@ -62,29 +25,19 @@ const Signup = (props) => {
         }
     }
 
-    const newCustomerData = (e) => {
-        setNewuser({
-            ...newuser, [e.target.name]: e.target.value
-        });
-    }
-
-    const sendNewUserData = async (e) => {
-        e.preventDefault();
+    const sendNewUserData = async () => {
         props.setloadingBar(10);
         try {
             const res = await fetch("http://localhost:5000/signup/" + usertype, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(newuser)
+                body: JSON.stringify(values)
             })
-            props.setloadingBar(30);
             const json = await res.json();
             if (res.status === 200 && json) {
-                localStorage.setItem("token", json.token);
                 props.setloadingBar(50);
-                const data = await getUserDetails();
-                dispatch(getUser(data));
-                props.setloadingBar(75);
+                localStorage.setItem("token", json.token);
+                dispatch(getUser(json.registerSuccess));
                 if (usertype === 'customer') {
                     history.push("/");
                 }
@@ -105,6 +58,8 @@ const Signup = (props) => {
         }
     }
 
+    const { handleChange, values, errors, handleSubmit } = SignupFormValidate(sendNewUserData);
+
     useEffect(() => {
         props.setloadingBar(50);
         if (localStorage.getItem("token")) history.goBack();
@@ -123,7 +78,7 @@ const Signup = (props) => {
                                     <h3>Create Your Account</h3>
                                 </div>
                                 <div className="signupform">
-                                    <form id="mySignup">
+                                    <form id="mySignup" onSubmit={handleSubmit}>
                                         <div className="switchContainer">
                                             <span className="userType">Customer</span>
                                             <div className="form-check form-switch innerswitchContainer">
@@ -134,50 +89,65 @@ const Signup = (props) => {
                                         <div className="row">
                                             <div className="col-md-6">
                                                 <div>
-                                                    <label htmlFor="firstname" className='is-valid'>Firstname <span className="required">*</span></label>
+                                                    <label htmlFor="firstname">Firstname <span className="required">*</span></label>
                                                     <input type="text"
                                                         name="firstname"
                                                         id="firstname"
                                                         className="myInput"
-                                                        required onChange={newCustomerData} />
-                                                    <span className='invalid-feedback'>Firstname Must Have atleast 2 Characters</span>
+                                                        required
+                                                        onChange={handleChange} />
+                                                    {
+                                                        errors.firstname && <p className='formErrorSpan'>{errors.firstname}</p>
+                                                    }
                                                 </div>
                                                 <div>
-                                                    <label htmlFor="lastname" className='is-valid'>Lastname <span className="required">*</span></label>
+                                                    <label htmlFor="lastname">Lastname <span className="required">*</span></label>
                                                     <input type="text"
                                                         name="lastname"
                                                         id="lastname"
                                                         className="myInput"
-                                                        required onChange={newCustomerData} />
-                                                    <span className='invalid-feedback'>Lastname Must Have atleast 2 Characters</span>
+                                                        required
+                                                        onChange={handleChange} />
+                                                    {
+                                                        errors.lastname && <p className='formErrorSpan'>{errors.lastname}</p>
+                                                    }
                                                 </div>
                                                 <div>
-                                                    <label htmlFor="mobile" className='is-valid'>Mobile Number <span className="required">*</span></label>
-                                                    <input type="text"
+                                                    <label htmlFor="mobile">Mobile Number <span className="required">*</span></label>
+                                                    <input type="number"
                                                         name="phone"
                                                         id="phone"
                                                         className="myInput"
-                                                        required onChange={newCustomerData} />
-                                                    <span className='invalid-feedback'>Contact No. Must Have 10 Digits</span>
+                                                        required
+                                                        onChange={handleChange}
+                                                        maxLength={10}
+                                                    />
+                                                    {
+                                                        errors.phone && <p className='formErrorSpan'>{errors.phone}</p>
+                                                    }
                                                 </div>
                                             </div>
                                             <div className="col-md-6">
                                                 <div>
-                                                    <label htmlFor="Email ID" className='is-valid'>Email ID <span className="required">*</span></label>
+                                                    <label htmlFor="Email ID">Email ID <span className="required">*</span></label>
                                                     <input type="email"
                                                         name="email"
                                                         id="email"
-                                                        className="myInput" required onChange={newCustomerData} />
-                                                    <span className='invalid-feedback'>Email address is not valid</span>
+                                                        className="myInput"
+                                                        required
+                                                        onChange={handleChange} />
+                                                    {
+                                                        errors.email && <p className='formErrorSpan'>{errors.email}</p>
+                                                    }
                                                 </div>
                                                 <div>
-                                                    <label htmlFor="password" className='is-valid'>Password
+                                                    <label htmlFor="password">Password
                                                         <span className="required">*</span>
                                                         <div className="info">
                                                             <i className="fa fa-info-circle infoicon"></i>
                                                             <div className="passwordinfo">
                                                                 <span className="pass-info"><i className="fa fa-check"></i> Password Must Be
-                                                                    8 to 16 Character Long</span>
+                                                                    8 Character Long</span>
                                                                 <span className="pass-info"><i className="fa fa-check"></i> Must Have a
                                                                     Capital Character</span>
                                                                 <span className="pass-info"><i className="fa fa-check"></i> Must Have
@@ -191,22 +161,28 @@ const Signup = (props) => {
                                                         name="password"
                                                         id="password"
                                                         className="myInput"
-                                                        required onChange={newCustomerData} />
-                                                    <span className='invalid-feedback'>Must have Uppercase, Lowercase, Number, Any Speacial character and length must be between 8 to 16</span>
+                                                        required
+                                                        onChange={handleChange} />
+                                                    {
+                                                        errors.password && <p className='formErrorSpan'>{errors.password}</p>
+                                                    }
                                                 </div>
                                                 <div>
-                                                    <label htmlFor="confirmpassword" className='is-valid'>Confirm Password <span
+                                                    <label htmlFor="confirmpassword">Confirm Password <span
                                                         className="required">*</span></label>
                                                     <input type="password"
                                                         name="confirmpassword"
                                                         id="confirmpassword"
-
-                                                        className="myInput" required onChange={newCustomerData} />
-                                                    <span className='invalid-feedback'>Password Not Match</span>
+                                                        className="myInput"
+                                                        required
+                                                        onChange={handleChange} />
+                                                    {
+                                                        errors.confirmpassword && <p className='formErrorSpan'>{errors.confirmpassword}</p>
+                                                    }
                                                 </div>
                                             </div>
                                         </div>
-                                        <Button type="submit" size="small" variant="contained" className="btnsignup" onClick={sendNewUserData}>signup</Button>
+                                        <Button type="submit" size="small" variant="contained" className="btnsignup">signup</Button>
                                         <p className="login">Alredy Have An Account? <a href="./login">Login Here!</a></p>
                                     </form>
                                 </div>

@@ -232,8 +232,8 @@
 
 #basket {
   position: fixed;
-  bottom: 10px;
-  right: -20px;
+  bottom: 30px;
+  right: 0px;
   cursor: pointer;
   margin-right: 2rem;
   z-index: 1;
@@ -245,18 +245,18 @@
   color: rgb(247, 247, 247);
   border-radius: 50%;
   padding: 10px;
-  box-shadow: 0 0 5px 0 rgb(247, 247, 247);
+  box-shadow: 0 0 5px 0 rgb(255, 1, 1);
 }
 
 #basketcart {
   width: auto;
   height: auto;
   position: absolute;
-  bottom: 120%;
-  right: 0rem;
+  bottom: 63px;
+  right: -10px;
   transition: 0.5s;
   opacity: 1;
-  display: none;
+  display: flex;
 }
 
 #basketcart.showbasketcart {
@@ -914,6 +914,12 @@
 
 /************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************ Login ************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
 /****************************************** Login ******************************************/
+.formErrorSpan{
+  color: red;
+  font-size: 13px;
+  margin-bottom: 10px !important;
+}
+
 .switchContainer {
   margin-bottom: 20px;
   display: flex;
@@ -971,15 +977,6 @@
   text-align: center;
   font-weight: 700;
   color: var(--green);
-}
-
-#login_content .notice {
-  font-size: 0.7rem;
-  color: gray;
-  text-align: center;
-  border-bottom: 1px solid lightgray;
-  padding-bottom: 0.5rem;
-  margin-bottom: 1rem !important;
 }
 
 #login_content .formdetail {
@@ -2082,6 +2079,7 @@
 
 #account-primary-table .activeusermenu {
   color: var(--green);
+  background-color: white !important;
 }
 
 #account-primary-table .userbox .userinnerbox {
@@ -2097,6 +2095,13 @@
   #account-primary-table .userbox .userinnerbox {
     display: none;
     padding: 10px;
+  }
+  #account-primary-table .userbox .usermenubar .usermenulisticon {
+    margin-right: 0.1rem;
+    font-size: 1rem;
+  }
+  #account-primary-table .userbox .usermenubar .usermenulist {
+    font-size: 0.7rem;
   }
 }
 
@@ -2276,11 +2281,11 @@
   top: 0;
   left: 0;
   background-color: rgba(0, 0, 0, 0.445);
-  width: 0;
+  width: 100%;
   height: 100vh;
   z-index: 1;
   position: fixed;
-  display: flex;
+  display: none;
   justify-content: flex-start;
   align-items: center;
   overflow: hidden;
@@ -2290,6 +2295,7 @@
 .address_overly .address_innerbox {
   background-color: white;
   height: 100%;
+  overflow-y: scroll;
   width: 25%;
   padding: 1rem 2rem;
 }
@@ -2308,6 +2314,7 @@
   text-transform: capitalize;
   color: rgb(184, 184, 184);
   font-size: 0.8rem;
+  margin-top: 1rem;
 }
 
 .address_overly .address_innerbox .myaddressform .myaddressinput {
@@ -2320,7 +2327,6 @@
   border-right: none;
   outline: none;
   width: 90%;
-  margin-bottom: 1rem;
 }
 
 .address_overly .address_innerbox .address_header {
@@ -2355,7 +2361,7 @@
 }
 
 .active_address.address_overly {
-  width: 100%;
+  display: flex;
 }
 
 .active_address .address_innerbox {
@@ -2400,6 +2406,7 @@
 
 .newaddress_overly .newaddress_innerbox {
   background-color: white;
+  overflow-y: scroll;
   height: 100%;
   width: 25%;
   padding: 1rem 2rem;
@@ -2419,6 +2426,7 @@
   text-transform: capitalize;
   color: rgb(184, 184, 184);
   font-size: 0.8rem;
+  margin-top: 1rem;
 }
 
 .newaddress_overly .newaddress_innerbox .mynewaddressform .mynewaddressinput {
@@ -2431,7 +2439,6 @@
   border-right: none;
   outline: none;
   width: 90%;
-  margin-bottom: 1rem;
 }
 
 .newaddress_overly .newaddress_innerbox .newaddress_header {
@@ -2462,7 +2469,7 @@
   display: flex;
   justify-content: center;
   align-content: center;
-  margin-top: 2rem;
+  margin-top: 1rem;
 }
 
 .newaddress_overly .newaddress_innerbox .place .selectplace {
@@ -2541,6 +2548,7 @@
   text-transform: capitalize;
   color: rgb(184, 184, 184);
   font-size: 0.8rem;
+  margin-top: 1rem;
 }
 
 .profile_overly .profile_innerbox .myprofileform .myprofileinput {
@@ -2553,7 +2561,6 @@
   border-right: none;
   outline: none;
   width: 90%;
-  margin-bottom: 1rem;
 }
 
 .profile_overly .profile_innerbox .profile_header {
@@ -2863,6 +2870,47 @@
   opacity: 0.7;
 }
 
+.reviewbox .reviewsContainer {
+  width: 100%;
+  margin-top: 20px;
+}
+
+.reviewbox .reviewsContainer .review__header {
+  color: var(--green);
+  font-weight: 300;
+  margin-bottom: 10px !important;
+
+}
+
+.reviewbox .reviewContent {
+  margin-bottom: 20px;
+}
+
+.reviewbox .reviewContent .review__info {
+  display: flex;
+justify-content: space-between;
+align-items: center;
+}
+
+.reviewbox .reviewContent .review__info .review__username {
+  color: rgb(44, 44, 44);
+  margin-bottom: 10px;
+  font-weight: 500;
+  font-size: 15px;
+}
+
+.reviewbox .reviewContent .review__msg {
+  font-size: 13px;
+  margin-top: 10px;
+  margin-bottom: 10px !important;
+  color: rgb(150, 150, 150);
+}
+
+.reviewbox .reviewContent .review__info .review__date {
+  font-size: 13px;
+  color: rgb(184, 184, 184);
+}
+
 /************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************ Restaurant ************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
 
 .managementContainer {
@@ -3166,6 +3214,7 @@
   text-transform: capitalize;
   color: rgb(184, 184, 184);
   font-size: 0.8rem;
+  margin-top: 1rem;
 }
 
 .profile_overly .profile_innerbox .myprofileform .myprofileinput {
@@ -3178,7 +3227,6 @@
   border-right: none;
   outline: none;
   width: 90%;
-  margin-bottom: 1rem;
 }
 
 .profile_overly .profile_innerbox .profile_header {

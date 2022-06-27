@@ -21,10 +21,6 @@ const customerSchema = new mongoose.Schema({
         type: String,
         require: true
     },
-    confirmpassword: {
-        type: String,
-        require: true
-    },
     phone: {
         type: Number,
         require: true,
@@ -45,15 +41,6 @@ customerSchema.methods.generateAuthToken = async function (req, res) {
         console.log("Some error to generate token " + error);
     }
 }
-
-// Password hasing
-customerSchema.pre("save", async function (next) {
-    if (this.isModified("password")) {
-        this.password = await bcryptjs.hash(this.password, 10);
-        this.confirmpassword = await bcryptjs.hash(this.confirmpassword, 10);
-    }
-    next();
-});
 
 const Customer = new mongoose.model("customers", customerSchema);
 

@@ -7,6 +7,8 @@ import foodContext from '../../context/foody/foodContext';
 import Button from '@material-ui/core/Button';
 import CloseIcon from '@material-ui/icons/Close';
 import swal from 'sweetalert';
+import AddressValidate from '../../validation/AddressValidate';
+import UpdateAddressValidate from '../../validation/UpdateAddressValidate';
 
 const AddressMain = (props) => {
     const closeEditAddressSlide = () => document.getElementsByClassName("address_overly")[0].classList.remove("active_address");
@@ -16,64 +18,46 @@ const AddressMain = (props) => {
     const context = useContext(foodContext);
     const { addAddress, addresses, editAddress } = context;
 
-    // Address
-    const [newaddress, setNewAddress] = useState({
-        house: "", societyname: "", landmark: "", city: "", pincode: "", place: ""
-    });
+    const [place, setPlace] = useState("home");
+    const [addressId, setAddressId] = useState(null);
 
-    const onChangeNewAddress = (e) => setNewAddress({ ...newaddress, [e.target.name]: e.target.value });
-
-    const handleAddAddress = (e) => {
-        props.setloadingBar(10);
-        e.preventDefault();
-        const { house, societyname, landmark, city, pincode, place } = newaddress;
+    const handleAddAddress = () => {
+        values.place = place;
         props.setloadingBar(50);
-        const res = addAddress(house, societyname, landmark, city, pincode, place);
+        const res = addAddress(values);
         if (!res) {
-            props.setloadingBar(100);
             swal("Oops!", "Something went wrong please try again later", "error");
         }
         else {
-            setNewAddress({
-                house: "", societyname: "", landmark: "", city: "", pincode: "", place: ""
-            });
-            props.setloadingBar(100);
             swal("Yeyyyy!", "New Address Added", "success");
         }
         closeAddAddressSlide();
+        props.setloadingBar(100);
     }
 
     // Edit Address
-    const [prevAddress, setPrevAddress] = useState({
-        house: "", societyname: "", landmark: "", city: "", pincode: "", place: "", user: ""
-    });
-
     const editAddressSlide = (place, house, societyname, landmark, city, pincode, _id) => {
-        setPrevAddress({ house, societyname, landmark, city, pincode, place, user: _id });
+        setAddressId(_id)
+        setUpdateValues({ house, societyname, landmark, city, pincode, place });
         setTimeout(() => document.getElementsByClassName("address_overly")[0].classList.add("active_address"), 500);
     }
 
-    const onChangeEditAddress = (e) => setPrevAddress({ ...prevAddress, [e.target.name]: e.target.value });
-
-    const handleEditAddress = (e) => {
-        props.setloadingBar(10);
-        e.preventDefault();
-        const { house, societyname, landmark, city, pincode, place, user } = prevAddress;
+    const handleEditAddress = () => {
+        // updateValues.place = setUpdateValues.place;
         props.setloadingBar(50);
-        const res = editAddress(house, societyname, landmark, city, pincode, place, user);
+        const res = editAddress(updateValues, addressId);
         if (!res) {
-            props.setloadingBar(100);
             swal("Oops!", "Something went wrong please try again later", "error");
         }
         else {
-            props.setloadingBar(100);
             swal("Yeyyyy!", "Address Updated", "success");
-            setPrevAddress({
-                house: "", societyname: "", landmark: "", city: "", pincode: "", place: "", user: ""
-            });
         }
         closeEditAddressSlide();
+        props.setloadingBar(100);
     }
+
+    const { handleChange, values, errors, handleSubmit } = AddressValidate(handleAddAddress);
+    const { updateValues, updateErrors, setUpdateValues, UpdatehandleChange, UpdatehandleSubmit } = UpdateAddressValidate(handleEditAddress);
 
     return (
         <div className="userinnerbox" data_name="Address">
@@ -96,28 +80,46 @@ const AddressMain = (props) => {
                                     <CloseIcon className="closebtn" onClick={closeEditAddressSlide} />
                                     <p className="address_heading">Update Address</p>
                                 </div>
-                                <form method="post" className="myaddressform">
+                                <form className="myaddressform" onSubmit={UpdatehandleSubmit}>
                                     <label htmlFor="house">house / flat no.</label>
-                                    <input type="text" name="house" defaultValue={prevAddress.house} onChange={onChangeEditAddress} className="myaddressinput" />
+                                    <input type="text" name="house" value={updateValues.house} onChange={UpdatehandleChange} className="myaddressinput" required />
+                                    {
+                                        updateErrors.house && <p className='formErrorSpan'>{updateErrors.house}</p>
+                                    }
                                     <label htmlFor="name">society / flat name</label>
-                                    <input type="text" name="name" defaultValue={prevAddress.societyname} onChange={onChangeEditAddress} className="myaddressinput" />
+                                    <input type="text" name="societyname" value={updateValues.societyname} onChange={UpdatehandleChange} className="myaddressinput" required />
+                                    {
+                                        updateErrors.societyname && <p className='formErrorSpan'>{updateErrors.societyname}</p>
+                                    }
                                     <label htmlFor="landmark">landmark</label>
-                                    <input type="text" name="landmark" defaultValue={prevAddress.landmark} onChange={onChangeEditAddress} className="myaddressinput" />
+                                    <input type="text" name="landmark" value={updateValues.landmark} onChange={UpdatehandleChange} className="myaddressinput" required />
+                                    {
+                                        updateErrors.landmark && <p className='formErrorSpan'>{updateErrors.landmark}</p>
+                                    }
                                     <label htmlFor="city">City</label>
-                                    <input type="text" name="city" defaultValue={prevAddress.city} onChange={onChangeEditAddress} className="myaddressinput" />
+                                    <input type="text" name="city" value={updateValues.city} onChange={UpdatehandleChange} className="myaddressinput" required />
+                                    {
+                                        updateErrors.city && <p className='formErrorSpan'>{updateErrors.city}</p>
+                                    }
                                     <label htmlFor="pincode">Pincode</label>
-                                    <input type="text" name="pincode" defaultValue={prevAddress.pincode} onChange={onChangeEditAddress} className="myaddressinput" />
+                                    <input type="text" name="pincode" value={updateValues.pincode} onChange={UpdatehandleChange} className="myaddressinput" required />
+                                    {
+                                        updateErrors.pincode && <p className='formErrorSpan'>{updateErrors.pincode}</p>
+                                    }
                                     <div className="place">
                                         <label className="myRadioLabel">
-                                            <input type="radio" name="place" onChange={onChangeEditAddress} required />
+                                            <input type="radio" name="place" value="home" checked={updateValues.place === "home"} />
                                             <span><HomeOutlinedIcon /> Home</span>
                                         </label>
                                         <label className="myRadioLabel">
-                                            <input type="radio" name="place" onChange={onChangeEditAddress} required />
+                                            <input type="radio" name="place" value="work" checked={updateValues.place === "work"} />
                                             <span><WorkOutlineOutlinedIcon /> Work</span>
                                         </label>
                                     </div>
-                                    <Button variant="contained" className="btn_address" onClick={handleEditAddress}>save</Button>
+                                    {
+                                        updateErrors.place && <p className='formErrorSpan'>{updateErrors.place}</p>
+                                    }
+                                    <Button type="submit" variant="contained" className="btn_address">save</Button>
                                 </form>
                             </div>
                         </div>
@@ -127,28 +129,46 @@ const AddressMain = (props) => {
                                     <CloseIcon className="newclosebtn" onClick={closeAddAddressSlide} />
                                     <p className="newaddress_heading">New Address</p>
                                 </div>
-                                <form method="post" className="mynewaddressform">
+                                <form className="mynewaddressform" onSubmit={handleSubmit}>
                                     <label htmlFor="house">house / flat no.</label>
-                                    <input type="text" name="house" className="mynewaddressinput" defaultValue={newaddress.house} onChange={onChangeNewAddress} />
+                                    <input type="text" name="house" className="mynewaddressinput" onChange={handleChange} required />
+                                    {
+                                        errors.house && <p className='formErrorSpan'>{errors.house}</p>
+                                    }
                                     <label htmlFor="name">society / flat name</label>
-                                    <input type="text" name="societyname" className="mynewaddressinput" defaultValue={newaddress.societyname} onChange={onChangeNewAddress} />
+                                    <input type="text" name="societyname" className="mynewaddressinput" onChange={handleChange} required />
+                                    {
+                                        errors.societyname && <p className='formErrorSpan'>{errors.societyname}</p>
+                                    }
                                     <label htmlFor="landmark">landmark</label>
-                                    <input type="text" name="landmark" className="mynewaddressinput" defaultValue={newaddress.landmark} onChange={onChangeNewAddress} />
+                                    <input type="text" name="landmark" className="mynewaddressinput" onChange={handleChange} required />
+                                    {
+                                        errors.landmark && <p className='formErrorSpan'>{errors.landmark}</p>
+                                    }
                                     <label htmlFor="city">City</label>
-                                    <input type="text" name="city" className="mynewaddressinput" defaultValue={newaddress.city} onChange={onChangeNewAddress} />
+                                    <input type="text" name="city" className="mynewaddressinput" onChange={handleChange} required />
+                                    {
+                                        errors.city && <p className='formErrorSpan'>{errors.city}</p>
+                                    }
                                     <label htmlFor="pincode">Pincode</label>
-                                    <input type="text" name="pincode" className="mynewaddressinput" defaultValue={newaddress.pincode} onChange={onChangeNewAddress} />
+                                    <input type="number" name="pincode" className="mynewaddressinput" onChange={handleChange} required maxLength={6} />
+                                    {
+                                        errors.pincode && <p className='formErrorSpan'>{errors.pincode}</p>
+                                    }
                                     <div className="place">
                                         <label className="myRadioLabel">
-                                            <input type="radio" name="place" value="home" onChange={onChangeNewAddress} />
+                                            <input type="radio" name="place" value="home" onChange={(e) => setPlace(e.target.value)} checked />
                                             <span><HomeOutlinedIcon /> Home</span>
                                         </label>
                                         <label className="myRadioLabel">
-                                            <input type="radio" name="place" value="work" onChange={onChangeNewAddress} />
+                                            <input type="radio" name="place" value="work" onChange={(e) => setPlace(e.target.value)} />
                                             <span><WorkOutlineOutlinedIcon /> Work</span>
                                         </label>
                                     </div>
-                                    <Button variant="contained" className="btn_newaddress" onClick={handleAddAddress}>Add Address</Button>
+                                    {
+                                        errors.place && <p className='formErrorSpan'>{errors.place}</p>
+                                    }
+                                    <Button type="submit" variant="contained" className="btn_newaddress">Add Address</Button>
                                     <Button type="reset" variant="contained">Clear</Button>
                                 </form>
                             </div>

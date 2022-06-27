@@ -1,6 +1,7 @@
 const express = require("express");
 const bcryptjs = require("bcrypt");
 const multer = require("multer");
+const otpGenerator = require("otp-generator");
 const router = express.Router();
 
 const Customer = require("../models/Customer");
@@ -9,7 +10,10 @@ const Order = require("../models/Order");
 const Food = require("../models/Food");
 const Review = require("../models/Review");
 const Owner = require("../models/Owner");
+const Otp = require("../models/Otp");
+const Forgot = require("../models/Forgot");
 const auth = require("../middleware/auth");
+const pincodes = require("../pincodes.json");
 
 
 const DIR = './public/';
@@ -75,7 +79,9 @@ router.post("/signup/:usertype", async (req, res) => {
                 return res.status(400).json({ error: "This Email Address is already in used" });
             }
 
-            const registerCustomer = new Customer({ firstname, lastname, phone, email, password, confirmpassword, usertype });
+            const hashpass = await bcryptjs.hash(password, 10);
+
+            const registerCustomer = new Customer({ firstname, lastname, phone, email, password: hashpass, usertype });
 
             // Generate token
             const token = await registerCustomer.generateAuthToken();
@@ -84,7 +90,7 @@ router.post("/signup/:usertype", async (req, res) => {
             if (!registerSuccess) {
                 return res.status(400).json({ error: "Some error getting to create user account" });
             }
-            return res.status(200).json({ success: "Account created successfully", token });
+            return res.status(200).json({ success: "Account created successfully", token, registerSuccess });
         }
         if (usertype === "restaurant") {
             const { firstname, lastname, phone, email, password, confirmpassword } = req.body;
@@ -98,7 +104,9 @@ router.post("/signup/:usertype", async (req, res) => {
                 return res.status(400).json({ error: "This Email Address is already in used" });
             }
 
-            const registerCustomer = new Owner({ firstname, lastname, phone, email, password, confirmpassword, usertype });
+            const hashpass = await bcryptjs.hash(password, 10);
+
+            const registerCustomer = new Owner({ firstname, lastname, phone, email, password: hashpass, usertype });
 
             // Generate token
             const token = await registerCustomer.generateAuthToken();
@@ -107,10 +115,11 @@ router.post("/signup/:usertype", async (req, res) => {
             if (!registerSuccess) {
                 return res.status(400).json({ error: "Some error getting to create owner account" });
             }
-            return res.status(200).json({ success: "Owner account created successfully", token });
+            return res.status(200).json({ success: "Owner account created successfully", token, registerSuccess });
         }
     }
     catch (error) {
+        console.log(error);
         return res.status(400).json({ error: "Some error getting in try catch while create an accont, solve it", error });
     }
 })
@@ -118,11 +127,9 @@ router.post("/signup/:usertype", async (req, res) => {
 // Login
 router.post("/login/:usertype", async (req, res) => {
     const { email, password } = req.body;
-    console.log(req.body);
     const usertype = req.params.usertype;
     try {
         if (usertype === 'customer') {
-            console.log("customer");
             // Find user by id
             const findData = await Customer.findOne({ email, usertype });
             if (!findData) {
@@ -144,7 +151,6 @@ router.post("/login/:usertype", async (req, res) => {
             return res.status(200).json({ findData, success: "Welcome back", token });
         }
         if (usertype === 'restaurant') {
-            console.log("restaurant");
             // Find user by id
             const findData = await Owner.findOne({ email, usertype });
             if (!findData) {
@@ -329,56 +335,24 @@ router.delete("/deleteaddress/:id", auth, async (req, res) => {
     }
 });
 
-// Password change
-router.put("/forgotpassword", auth, async (req, res) => {
-    try {
-        const { password, confirmpassword } = req.body;
-        if (password !== confirmpassword) {
-            // console.log("Password not Match with Confirm Password");
-            return res.status(400).json({ error: "Password not Match with Confirm Password" });
-        }
-
-        const findUser = await Customer.findById(req.userId);
-        if (!findUser) {
-            // console.log("User not found");
-            return res.status(400).json({ error: "User not found" });
-        }
-
-        if (findUser._id.toString() !== req.userId.toString()) {
-            // console.log("Not Allowed for change password");
-            return res.status(400).json({ error: "Not Allowed for change password" });
-        }
-
-        const hashpassword = await bcryptjs.hash(req.body.password, 10);
-        const hashconfirmpassword = await bcryptjs.hash(req.body.confirmpassword, 10);
-        const changePassword = await Customer.findByIdAndUpdate(req.userId, { $set: { password: hashpassword, confirmpassword: hashconfirmpassword } }, { new: true });
-        return res.status(200).json({ success: "Password changed" });
-    }
-    catch (error) {
-        // console.log("Some error to forgot password", error);
-        return res.status(400).json({ error: "Some error to forgot password" });
-    }
-})
-
 // Order food
 router.post("/orderfood", auth, async (req, res) => {
+    const { cart, oid, totalamount, finalamount, coupen, discountamount, deliverycharge, deliveryaddress, name, email, phone } = req.body;
+    console.log(oid);
     try {
-        const food = req.body.newElement;
-        const deliveryaddress = req.body.orderAddress;
-        const subtotal = req.body.finalamount;
-
-        const takeOrder = new Order({ food, deliveryaddress, subtotal, user: req.userId });
-        const storeOrder = await takeOrder.save();
+        const createOrder = new Order({ food: cart, orderId: oid, totalamount, subtotal: finalamount, coupenapplied: coupen, discount: discountamount, deliverycharge, deliveryaddress, name, email, phone, user: req.userId });
+        const storeOrder = await createOrder.save();
         if (!storeOrder) {
             // console.log("Order not take");
             return res.status(400).json({ erorr: "Order Not Take, Please Try Again" });
         }
         // console.log(storeOrder);
-        return res.status(200).json({ success: "Order Take By Us, Your Food Is On Way" });
+        return res.status(200).json({ success: "Order Placed" });
     }
     catch (error) {
+        console.log(error);
         // console.log("Some error to store order", error);
-        return res.status(400).json({ error: "Some error to store order", error });
+        return res.status(400).json({ error: "Some error to store order" });
     }
 })
 
@@ -416,15 +390,33 @@ router.get("/getFood", async (req, res) => {
 // Review
 router.post("/review", auth, async (req, res) => {
     try {
-        const { msg, rating } = req.body;
+        const { msg, rating, name } = req.body;
+        if (!msg || !rating || rating > 5) {
+            return res.status(400).json("Field can not be blank");
+        }
+        const review = await Review.findOne({ user: req.userId });
+        if (review) {
+            review.msg = msg;
+            review.rating = rating;
+
+            const saveReview = await review.save();
+
+            if (!saveReview) return res.status(400).json("Some error to save reviews");
+
+            return res.status(200).json('Review send,We will improve your suggestion.');
+        }
+
         if (!msg) return res.status(400).json("Review box can not be empty")
-        const createReview = new Review({ user: req.userId, msg, rating });
+
+        const createReview = new Review({ user: req.userId, msg, rating, name });
+
         const saveReview = await createReview.save();
+
         if (!saveReview) return res.status(400).json("Some error to save reviews");
-        return res.status(200).json('Review send');
+
+        return res.status(200).json('Review send,We will improve your suggestion.');
     }
     catch (error) {
-        console.log(error);
         return res.status(400).json("Some error to store rating");
     }
 })
@@ -432,13 +424,13 @@ router.post("/review", auth, async (req, res) => {
 // Get Review
 router.get("/review", async (req, res) => {
     try {
-        const getReviews = await Review.find().select({ rating: 1, _id: 0 });
-        console.log(getReviews);
-        if (!getReviews) return res.status(400).json("Some error to get reviews");
-        return res.status(200).json(getReviews);
+        const reviews = await Review.find();
+        console.log(reviews);
+        if (!reviews) return res.status(400).json("Some error to get reviews");
+
+        return res.status(200).json(reviews);
     }
     catch (error) {
-        console.log(error);
         return res.status(400).json("Some error to store rating");
     }
 })
@@ -522,5 +514,138 @@ router.get("/getrestaurantfood", auth, async (req, res) => {
 
     }
 })
+
+// Get Pincodes
+router.get("/pincodes", async (req, res) => {
+    try {
+        await pincodes;
+        return res.status(200).json({ success: true, pincodes });
+    }
+    catch (error) {
+        return res.status(400).json({ success: false, error: "Something went wrong while fetching pincodes" });
+    }
+})
+
+// Forgot Password
+router.post("/forgotpassword", async (req, res) => {
+    try {
+        // send token using nodemailer
+        if (req.body.canSendEmail) {
+
+            const otpHolder = await Otp.find({ email: req.body.email });
+
+            if (!otpHolder) return res.status(400).json({ success: false, error: "OTP was expire" });
+
+            const rightOtp = otpHolder[otpHolder.length - 1];
+
+            const comapreOtp = await bcryptjs.compare(req.body.otp, rightOtp.otp);
+
+            if (comapreOtp && rightOtp.email === req.body.email) {
+
+                const token = "nkjsnfkjnfjnvknfjnjfdnbjfdn";
+
+                const forgot = new Forgot({
+                    email: req.body.email,
+                    token: token
+                });
+
+                await forgot.save();
+                await Otp.deleteMany({ email: rightOtp.email });
+
+                return res.status(200).json({ success: true, token, message: "Password reset intruction sended to your email id" });
+            }
+
+            else res.status(400).json({ success: false, error: "Wrong OTP!" });
+        }
+
+        else {
+            console.log(req.body);
+            if (req.body.password !== req.body.confirmpassword) return res.status(400).json({ success: false, error: "Passwords not matched" });
+
+            const getToken = await Forgot.findOne({ token: req.headers.token });
+
+            if (!getToken) return res.status(400).json({ success: false, error: "Password reset link was expires or invalid" });
+
+            req.body.password = await bcryptjs.hash(req.body.password, 10);
+
+            const userpass = await Customer.findOneAndUpdate({ email: getToken.email }, { password: req.body.password }, { new: true });
+
+            const removeToken = await getToken.remove();
+
+            if (!userpass || !removeToken) return res.status(400).json({ success: false, error: "Something went wrong" });
+
+            return res.status(200).json({ success: true, message: "Password Changed successsfully" });
+
+        }
+
+    }
+
+    catch (error) {
+        console.log(error);
+        return res.status(400).json({ success: false, error: "Something went wrong" });
+    }
+});
+
+// Generate Otp
+router.post("/sendotp", async (req, res) => {
+    try {
+
+        // send otp using nodemailer
+        const user = await Customer.findOne({ email: req.body.email });
+
+        if (!user) return res.status(400).json({ success: false, error: "User not found with this email id" });
+
+        const OTP = otpGenerator.generate(6, {
+            digits: true, alphabets: false, upperCaseAlphabets: false, lowerCaseAlphabets: false, specialChars: false
+        });
+
+        console.log(OTP);
+
+        const otphash = await bcryptjs.hash(OTP, 10);
+
+        const otp = new Otp({
+            email: req.body.email,
+            otp: otphash
+        });
+
+        await otp.save();
+        return res.status(200).json({ success: true, OTP, message: "Otp sended to your email id." });
+    }
+    catch (error) {
+        console.log(error);
+        return res.status(400).json({ success: false, error: "Something went wrong" });
+    }
+});
+
+// change password
+router.put("/changepassword", auth, async (req, res) => {
+    try {
+
+        if (req.body.newpassword !== req.body.confirmnewpassword) return res.status(400).json({ success: false, error: "Passwords not matched" });
+
+        if (req.body.newpassword === req.body.currentpassword) return res.status(400).json({ success: false, error: "New Password Should not Same as Current Password" });
+
+        const user = await Customer.findById(req.userId);
+
+        if (!user) return res.status(400).json({ success: false, error: "User not found" });
+
+        const comparePass = await bcryptjs.compare(req.body.currentpassword, user.password);
+
+        if (!comparePass) return res.status(400).json({ success: false, error: "Current Password is Wrong" });
+
+        user.password = await bcryptjs.hash(req.body.newpassword, 10);
+
+        const saveUser = await user.save();
+
+        if (!saveUser) return res.status(400).json({ success: false, error: "Something went wrong" });
+
+        return res.status(200).json({ success: true, message: "Password Changed" });
+
+    }
+    catch (error) {
+        console.log(error);
+        return res.status(400).json({ success: false, error: "Something went wrong" });
+    }
+});
 
 module.exports = router

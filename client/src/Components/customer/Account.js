@@ -15,6 +15,7 @@ import AccountInfo from './AccountInfo';
 import AddressMain from './AddressMain';
 import swal from 'sweetalert';
 import StarRatings from 'react-star-ratings';
+import AccountFormValidate from '../../validation/AccountFormValidate';
 
 const userinfobox = (e) => {
     const userInnerbox = document.querySelectorAll('.userinnerbox');
@@ -49,33 +50,26 @@ const Account = (props) => {
     const userdata = useSelector((state) => state.getUserReducer.userdata);
 
     // Account
-
-    const [updateAccount, setUpdateAccount] = useState({ firstname: "", lastname: "", email: "", phone: "" });
-
-    const updateProfile = (e) => setUpdateAccount({ ...updateAccount, [e.target.name]: e.target.value });
-
     const handleCurrentUserData = (firstname, lastname, email, phone) => {
-        setUpdateAccount({ firstname, lastname, email, phone });
+        setValues({ firstname, lastname, email, phone });
         editProfileSlider();
     }
 
-    const updateInfo = (e) => {
-        e.preventDefault();
+    const updateInfo = () => {
         props.setloadingBar(10);
-        const { firstname, lastname, email, phone, age } = updateAccount;
-        const res = editProfile(firstname, lastname, email, phone, age);
-        props.setloadingBar(50);
+        const res = editProfile(values);
         if (res) {
             swal("Yey!", "Your Profile Updated", "success");
             closeProfileSlide();
-            props.setloadingBar(100);
         }
         else {
             swal("Oops!", "Something went wrong please try again later", "error");
             closeProfileSlide();
-            props.setloadingBar(100);
         }
+        props.setloadingBar(100);
     }
+
+    const { handleChange, values, setValues, errors, handleSubmit } = AccountFormValidate(updateInfo);
 
     const LogoutUser = async () => {
         props.setloadingBar(50);
@@ -85,52 +79,73 @@ const Account = (props) => {
         props.setloadingBar(100);
     }
 
-    // Rating
+    // Review
+    const [reviews, setReviews] = useState([]);
     const [rating, setRating] = useState(0);
-
-    // Review Submit
     const [msg, setMsg] = useState("");
     const setMsgState = (e) => {
         setMsg(e.target.value);
     }
 
     const handleSubmitReview = async (e) => {
-        e.preventDefault();
-        const reviewObj = { rating, msg };
-        const res = await fetch("/review", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(reviewObj)
-        });
-        const json = await res.json();
-        if (res.status === 200) {
-            swal("Thank You", json + ", We will improve your suggestion.", "success");
-            setMsg("");
-            setRating(0);
+        try {
+            e.preventDefault();
+            const reviewObj = { rating, msg, name: userdata.firstname + " " + userdata.lastname };
+            const res = await fetch("http://localhost:5000/review", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "token": localStorage.getItem("token")
+                },
+                body: JSON.stringify(reviewObj)
+            });
+            const json = await res.json();
+            if (res.status === 200) {
+                swal("Thank You", json, "success");
+                setMsg("");
+                setRating(0);
+            }
+            else swal("Oops...", json, "error");
         }
-        else swal("Oops...", json, "error");
+        catch (error) {
+            console.log(error);
+            swal("Oops...", "Something Went Wrong", "error");
+        }
+    }
+
+    const getReviews = async () => {
+        try {
+            const res = await fetch("http://localhost:5000/review", {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "token": localStorage.getItem("token")
+                }
+            });
+            const json = await res.json();
+            setReviews(json);
+        }
+        catch (error) {
+            console.log(error);
+        }
     }
 
     // all
-    const [orders, setOrders] = useState();
+    const [orders, setOrders] = useState([]);
     useEffect(() => {
         const getUserDetailFun = async () => {
-            try {
-                if (localStorage.getItem("token")) {
-                    getAddress();
-                    const getOrderFun = async () => {
-                        const order = await getOrders();
-                        setOrders(order);
-                    };
-                    getOrderFun();
-                }
-                else {
-                    history.push("/login");
-                }
+            if (localStorage.getItem("token")) {
+                const getOrderFun = async () => {
+                    const orders = await getOrders();
+                    setOrders(orders);
+                };
+                getOrderFun();
+                getAddress();
+                getReviews();
             }
-            catch (error) { console.log(error); }
+            else {
+                history.push("/login");
+            }
         }
         props.setloadingBar(50);
         getUserDetailFun();
@@ -160,42 +175,43 @@ const Account = (props) => {
                             <div className="userbox">
                                 <ul className="usermenubar">
                                     <li className="usermenulist " data_name="Order" onClick={userinfobox}><ShoppingCartIcon className="usermenulisticon" /> Orders</li>
-                                    <li className="usermenulist " data_name="Address" onClick={userinfobox}><PersonPinIcon className="usermenulisticon" /> Address</li>
-                                    <li className="usermenulist activeusermenu" data_name="About FOODY" onClick={userinfobox}><InfoIcon className="usermenulisticon" />FOODY</li>
+                                    <li className="usermenulist activeusermenu" data_name="Address" onClick={userinfobox}><PersonPinIcon className="usermenulisticon" /> Address</li>
+                                    <li className="usermenulist " data_name="About FOODY" onClick={userinfobox}><InfoIcon className="usermenulisticon" />FOODY</li>
                                     <li className="usermenulist " data_name="My Account" onClick={userinfobox}><AccountBoxIcon className="usermenulisticon" />Account</li>
                                     <li className="usermenulist " data_name="furtherwork" onClick={userinfobox}><ContactSupportIcon className="usermenulisticon" />Further</li>
                                 </ul>
                                 <div className="userinnerbox" data_name="Order">
                                     <div className="accordion" id="accordionPanelsStayOpenExample">
                                         {
-                                            orders && orders.map((element, index) => {
+                                            orders && orders.map(item => {
                                                 return <>
-                                                    <div className="order__container" key={index + 1}>
+                                                    <div className="order__container" key={item._id}>
                                                         <div className="order__orderstatusinfo">
                                                             <div className="order__status">
                                                                 <p className='order__id'>Order status</p>
-                                                                <p className='order__totalitems'>Order Total ({element.food.length} items)</p>
+                                                                <p className='order__totalitems'>Order Total ({Object.keys(item.food).length} items)</p>
                                                             </div>
                                                         </div>
                                                         <div className="order__orderstatusinfo">
                                                             <div className="order__total">
-                                                                <p className='order__deliverdate'>{new Date(element.ordertime).toLocaleString()}</p>
-                                                                <span className='order__subtotal'>₹ {element.subtotal}.00</span>
+                                                                <p className='order__deliverdate'>{new Date(item.createdAt).toLocaleString()}</p>
+                                                                <span className='order__subtotal'>₹ {item.subtotal}.00</span>
                                                             </div>
                                                         </div>
                                                         <div className='order__detail'>
                                                             {
-                                                                element.food.map((food, index1) => {
+                                                                // console.log(Object.keys(item.food))
+                                                                Object.keys(item.food).map((foodItem, index1) => {
                                                                     return <>
                                                                         <div className="order__detail__innercontainer" key={index1 + 1}>
                                                                             <div className="order__foodimage">
-                                                                                <img src={food.foodimage} alt="" />
+                                                                                <img src={item.food[foodItem].foodimg} alt="" />
                                                                             </div>
                                                                             <div className="order__fooddetail">
-                                                                                <p className='order__hotelname'>{food.hotelname}</p>
-                                                                                <p className='order__foodname'>{food.foodname}</p>
-                                                                                <p className='order__qty'>Qty: {food.foodQuantity}</p>
-                                                                                <p className='order__price'>Price: &nbsp;₹ {food.foodprice}</p>
+                                                                                <p className='order__hotelname'>{item.food[foodItem].hotel}</p>
+                                                                                <p className='order__foodname'>{item.food[foodItem].foodname}</p>
+                                                                                <p className='order__qty'>Qty: {item.food[foodItem].qty}</p>
+                                                                                <p className='order__price'>Price: &nbsp;₹ {item.food[foodItem].price}</p>
                                                                             </div>
                                                                         </div>
                                                                     </>
@@ -228,7 +244,7 @@ const Account = (props) => {
                                                     <div className="reviewinnerbox">
                                                         <h5 className='ratingHeading'>Give Us Suggestions</h5>
                                                         <form className='reviewForm'>
-                                                            <textarea name="review" defaultValue={msg} onChange={setMsgState} placeholder='Whats the suggetions?' required>{msg}</textarea>
+                                                            <textarea name="review" defaultValue={msg} onChange={setMsgState} placeholder='Whats the suggetions?' required></textarea>
                                                             <StarRatings
                                                                 rating={rating}
                                                                 starRatedColor="gold"
@@ -236,9 +252,32 @@ const Account = (props) => {
                                                                 numberOfStars={5}
                                                                 name='rating'
                                                                 starDimension="20px"
+                                                                starHoverColor="#40a944"
                                                             />
                                                             <button type="submit" className='sendbtn' onClick={handleSubmitReview}>Send</button>
                                                         </form>
+                                                    </div>
+                                                    <div className="reviewsContainer">
+                                                        <h6 className='review__header'>Feedbacks and Ratings</h6>
+                                                        {
+                                                            reviews && reviews.map((review) => {
+                                                                return <div className="reviewContent">
+                                                                    <div className="review__info">
+                                                                        <p className='review__username'>{review.name}</p>
+                                                                        <p className="review__date">{new Date(review.createdAt).toLocaleDateString()}</p>
+                                                                    </div>
+                                                                    <StarRatings
+                                                                        rating={review.rating}
+                                                                        starRatedColor="gold"
+                                                                        isSelectable="false"
+                                                                        numberOfStars={5}
+                                                                        name='rating'
+                                                                        starDimension="17px"
+                                                                    />
+                                                                    <p className="review__msg">{review.msg}</p>
+                                                                </div>
+                                                            })
+                                                        }
                                                     </div>
                                                 </div>
                                             </div>
@@ -271,16 +310,28 @@ const Account = (props) => {
                                                                 <CloseIcon className="closebtnprofile" onClick={closeProfileSlide} />
                                                                 <p className="profile_heading">edit account information</p>
                                                             </div>
-                                                            <form method="post" className="myprofileform">
+                                                            <form className="myprofileform" onSubmit={handleSubmit}>
                                                                 <label htmlFor="name">firstname</label>
-                                                                <input type="text" name="firstname" className="myprofileinput" defaultValue={updateAccount.firstname} onChange={updateProfile} />
+                                                                <input type="text" name="firstname" className="myprofileinput" value={values.firstname} onChange={handleChange} />
+                                                                {
+                                                                    errors.firstname && <p className='formErrorSpan'>{errors.firstname}</p>
+                                                                }
                                                                 <label htmlFor="name">lastname</label>
-                                                                <input type="text" name="lastname" className="myprofileinput" defaultValue={updateAccount.lastname} onChange={updateProfile} />
+                                                                <input type="text" name="lastname" className="myprofileinput" value={values.lastname} onChange={handleChange} />
+                                                                {
+                                                                    errors.lastname && <p className='formErrorSpan'>{errors.lastname}</p>
+                                                                }
                                                                 <label htmlFor="email">email</label>
-                                                                <input type="email" name="email" className="myprofileinput" defaultValue={updateAccount.email} onChange={updateProfile} />
+                                                                <input type="email" name="email" className="myprofileinput" value={values.email} onChange={handleChange} />
+                                                                {
+                                                                    errors.email && <p className='formErrorSpan'>{errors.email}</p>
+                                                                }
                                                                 <label htmlFor="mobile">mobile</label>
-                                                                <input type="text" name="phone" className="myprofileinput" defaultValue={updateAccount.phone} onChange={updateProfile} />
-                                                                <Button variant="contained" className="btn_profile" onClick={updateInfo}>Update Profile</Button>
+                                                                <input type="text" name="phone" className="myprofileinput" value={values.phone} onChange={handleChange} />
+                                                                {
+                                                                    errors.phone && <p className='formErrorSpan'>{errors.phone}</p>
+                                                                }
+                                                                <Button type="submit" variant="contained" className="btn_profile" >Update Profile</Button>
                                                             </form>
                                                         </div>
                                                     </div>
@@ -314,7 +365,8 @@ const Account = (props) => {
                                 <ul>
                                     <li><Link to="/cart">my cart</Link></li>
                                     <li><Link to="/wishlist">my wishlist</Link></li>
-                                    <li><Link to="/newpassword">forgot password</Link></li>
+                                    <li><Link to="/forgotpassword">forgot password</Link></li>
+                                    <li><Link to="/changepassword">change password</Link></li>
                                     <li onClick={LogoutUser}><Link to="">logout</Link></li>
                                     <li><Link to="/">help</Link></li>
                                 </ul>

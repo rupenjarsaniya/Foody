@@ -5,16 +5,22 @@ import Button from '@material-ui/core/Button';
 import CloseSharpIcon from '@material-ui/icons/CloseSharp';
 import swal from 'sweetalert';
 import Cartitems from './Cartitems';
+import { useSelector } from 'react-redux';
 
 const Cart = (props) => {
     const history = useHistory();
     const context = useContext(foodContext);
     const { addToCart, removeFromCart, clearCart, cart, addToFavourite, getFoodLocal, getAddress, addresses, getFavFoodLocal, orderFood, getUserDetails, totalamount, deliverycharge, discountamount } = context;
 
+    const userdata = useSelector((state) => state.getUserReducer.userdata);
+
+    const [pincodes, setPincodes] = useState({});
     const [coupen, setCoupen] = useState("");
     const [coupenstatus, setCoupenstatus] = useState("");
     const [coupenamount, setCoupenamount] = useState(0);
+    const [finalamount, setFinalamount] = useState(0);
 
+    // Coupen
     const coupenApply = (e) => {
         setCoupen(e.target.value);
         let coupenvalue = e.target.value;
@@ -35,12 +41,10 @@ const Cart = (props) => {
             setCoupenstatus("Coupen Applied")
         }
         else {
-            coupenamount(0);
+            setCoupenamount(0);
             setCoupenstatus("Invalid Coupen Code");
         }
     }
-
-    const btnapply = () => { }
 
     const showcoupens = () => {
         const coupenlist = document.getElementsByClassName("coupenlist")[0];
@@ -52,86 +56,54 @@ const Cart = (props) => {
             }, 10000);
         }
     }
+
     const closecoupen = () => {
         visiblecoupens();
     }
+
     const visiblecoupens = () => {
         const coupenlist = document.querySelector(".coupenlist");
         coupenlist.style.display = 'none';
         coupenlist.classList.remove('showcoupen');
     };
 
-    //---------------------------------------------------------- Delivery ------------------------------------------------
-    const availableDelivery = ["382415", "382418", "382350", "380001"];
-    let warnpincode = `<p style="color:orange;"><i className="fa fa-exclamation-triangle"></i>&nbsp;Enter 6 Digit Pincode</p>`;
-    let availdelivery = `<p style="color:green;"><i className="fa fa-truck"></i>&nbsp;Delivery By Thusday, May 20, 2021</p>`;
-    let noavaildelivery = `<p style="color:red;"><i className="fa fa-exclamation-circle"></i>&nbsp;We Can't Delivery At This Pincode</p>`;
-
-    const pincode = () => {
-        var deliverystatus = document.getElementById("deliverystatus");
-        var pincode = document.getElementById("pincode");
-        for (let index = 0; index < availableDelivery.length; index++) {
-            const element = availableDelivery[index];
-            if (pincode.value.length !== 6 || pincode.value === null || pincode.value === "") {
-                deliverystatus.innerHTML = warnpincode;
+    // Pincode
+    const getPincodes = async () => {
+        const res = await fetch("http://localhost:5000/pincodes", {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json"
             }
-            else {
-                if (element === pincode.value) {
-                    deliverystatus.innerHTML = availdelivery;
-                    break;
-                }
-                else {
-                    deliverystatus.innerHTML = noavaildelivery;
-                }
-            }
-        }
+        });
+        const json = await res.json();
+        setPincodes(json);
     }
 
-    const [orderAddress, setOrderAddress] = useState("");
+    // Order
+    const [deliveryAddress, setDeliveryAddress] = useState("");
     const onChangeAddress = (e) => {
-        setOrderAddress(e.target.value);
+        setDeliveryAddress(e.target.value);
     }
 
     const readyOrder = async () => {
-        var finalamount = document.querySelector(".finalamount").innerHTML;
-        let myqty = document.querySelectorAll(".myqty");
-
-        let foodQuantity = "";
-        let newElement = [];
-
-        // Take a quantiy of food
-        myqty.forEach(element => {
-            foodQuantity = element.value;
-        });
-
-        // Add quantity to cart array and make a new array
-        if (cart.length === 0) {
-            swal("Oops!", "Your Cart is Empty!", "error");
+        const name = userdata.firstname + " " + userdata.lastname;
+        if (deliveryAddress === "") {
+            swal("Oops!", "Please select delivery address!", "warning");
             return;
         }
-        cart.forEach(element => {
-            element["foodQuantity"] = foodQuantity;
-            newElement.push(element);
-        });
-        if (!orderAddress) {
-            swal("Oops!", "Select Delivery Address and Try Again!", "warning");
+        if (Object.keys(cart).length === 0) {
+            swal("Oops!", "Cart is Empty!", "warning");
             return;
         }
-        props.setloadingBar(10);
-        const res = await orderFood(newElement, orderAddress, finalamount);
+        let oid = Math.floor(Math.random() * Date.now());
+        let res = await orderFood(cart, oid, totalamount, finalamount, coupen, discountamount, deliverycharge, deliveryAddress, name, userdata.email, userdata.phone);
         if (res) {
-            props.setloadingBar(75);
-            localStorage.removeItem("yourfood");
-            setTimeout(() => {
-                localStorage.removeItem("yourfood");
-            }, 1000);
-            swal("Your Order is Placed", "We Will Delivered Shortly", "success");
-            history.push("/");
-            props.setloadingBar(100);
+            swal("Confirm!", "Order Placed!", "success");
+            clearCart({});
+            setDeliveryAddress("");
         }
         else {
-            props.setloadingBar(100);
-            swal("Order Not Placed", "Something Went Wrong Please Try Again!", "error");
+            swal("Oops!", "Something went wrong", "error");
         }
     }
 
@@ -139,7 +111,13 @@ const Cart = (props) => {
         const handleFun = async () => {
             if (localStorage.getItem("token")) {
                 props.setloadingBar(50);
+                getPincodes();
                 getAddress();
+                if (Object.keys(cart).length === 0) {
+                    setCoupen("");
+                    setCoupenstatus("");
+                    setCoupenamount(0);
+                }
             }
             else {
                 history.push("/login");
@@ -149,6 +127,10 @@ const Cart = (props) => {
         handleFun();
         props.setloadingBar(100);
     }, []);
+
+    useEffect(() => {
+        setFinalamount(totalamount + deliverycharge - coupenamount - discountamount);
+    }, [totalamount]);
 
     return (
         <>
@@ -161,10 +143,10 @@ const Cart = (props) => {
                                     <div className="col-md-12">
                                         <div className="headercart">
                                             <h5>My Cart ({Object.keys(cart).length})</h5>
-                                            <input type="text" name="pincode" id="pincode" maxLength="6"
-                                                placeholder="Pincode" autoComplete="off" onChange={pincode} />
+                                            {/* <input type="text" name="pincode" id="pincode" maxLength="6"
+                                                placeholder="Pincode" autoComplete="off" /> */}
                                         </div>
-                                        <span id="deliverystatus"></span>
+                                        {/* <span id="deliverystatus"></span> */}
                                         <div className="underline-bhk-gray"></div>
                                     </div>
                                     <div className="col-md-12">
@@ -179,7 +161,7 @@ const Cart = (props) => {
                                                     </div> : <> {
                                                         Object.keys(cart).map((item, index) => {
                                                             const element = cart[item];
-                                                            return <> <Cartitems element={element} item={item} index={index + 1} addToFavourite={addToFavourite} removeFromCart={removeFromCart} addToCart={addToCart} /></>
+                                                            return <> <Cartitems key={index + 1} element={element} item={item} index={index + 1} addToFavourite={addToFavourite} removeFromCart={removeFromCart} addToCart={addToCart} /></>
                                                         })
                                                     }
                                                         <Button type="submit" variant="contained" className="btnplace" onClick={readyOrder}>place order</Button>
@@ -199,7 +181,7 @@ const Cart = (props) => {
                                                 <i className="fa fa-percent"></i>
                                                 <input type="text" name="coupen" id="coupen" defaultValue={coupen} onChange={coupenApply} placeholder="Apply Coupen" />
                                             </div>
-                                            <button type="button" className="btnapply" onClick={btnapply}>apply</button>
+                                            <button type="button" className="btnapply">apply</button>
                                         </div>
                                         <div className="underline-bhk-gray"></div>
                                         <div className="coupeninfo">
@@ -264,7 +246,7 @@ const Cart = (props) => {
                                         <div className="underline-dashed-gray"></div>
                                         <div className="pricedetail">
                                             <label>Total Amount</label>
-                                            <strong><span className="finalamount">{totalamount + deliverycharge - coupenamount - discountamount}</span></strong>
+                                            <strong><span className="finalamount">{finalamount}</span></strong>
                                         </div>
                                         <div className="underline-dashed-gray"></div>
                                         <div className="saving">You will save ₹<span className="saveamount">{totalamount - (totalamount + deliverycharge - coupenamount - discountamount) + deliverycharge}</span> on this order</div>
@@ -274,12 +256,13 @@ const Cart = (props) => {
                                     <div className="selectAddress_section">
                                         <h6>Select Address</h6>
                                         <div className="underline-bhk-gray"></div>
-                                        {addresses &&
+                                        {
+                                            addresses &&
                                             addresses.map((address, index) => {
                                                 const { city, house, landmark, pincode, place, societyname } = address;
                                                 return (
                                                     <label className="myAddressLabel" key={index + 1} >
-                                                        <input type="radio" name="address" value={house + " " + societyname + " " + landmark + " " + city + " " + pincode} onChange={onChangeAddress} />
+                                                        <input type="radio" name="address" value={house + ", " + societyname + ", " + landmark + ", " + city + ", " + pincode} onChange={onChangeAddress} />
                                                         <span>{house}, {societyname}, {landmark}, {city}, Gujarat-{pincode}</span>
                                                     </label>
                                                 )

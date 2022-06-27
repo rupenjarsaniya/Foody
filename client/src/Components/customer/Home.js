@@ -31,7 +31,6 @@ const Home = (props) => {
         props.setloadingBar(10);
         const getFoodDetails = async () => {
             const res = await getFood();
-            console.log(res);
         }
 
         if (!localStorage.getItem("token")) { history.push('/login'); }
@@ -98,7 +97,7 @@ const Home = (props) => {
                                     <h6 className="foodhotel">
                                         {hotel}
                                         {
-                                            _id in favcart
+                                            Object.keys(favcart).includes(_id)
                                                 ? <FavoriteIcon className="favfavicon" onClick={() => { removeFromFavourite(_id) }} />
                                                 : <FavoriteIcon className="favicon" onClick={() => { addToFavourite(_id, category, foodimg, hotel, foodname, price, 1) }} />
                                         }

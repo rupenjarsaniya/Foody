@@ -3,6 +3,7 @@ import FoodContext from './foodContext'
 import { getUser } from '../../actions/index';
 import { useDispatch } from 'react-redux';
 import axios from 'axios';
+import { TextareaAutosize } from '@material-ui/core';
 
 const FoodState = (props) => {
     const dispatch = useDispatch();
@@ -151,7 +152,7 @@ const FoodState = (props) => {
     }
 
     // Add Address
-    const addAddress = async (house, societyname, landmark, city, pincode, place) => {
+    const addAddress = async (newAddressData) => {
         try {
             const res = await fetch("http://localhost:5000/addaddress", {
                 method: "POST",
@@ -159,7 +160,7 @@ const FoodState = (props) => {
                     "Content-type": "application/json",
                     "token": localStorage.getItem("token")
                 },
-                body: JSON.stringify({ house, societyname, landmark, city, pincode, place })
+                body: JSON.stringify(newAddressData)
             });
             const json = await res.json();
             if (res.status === 200 && json) {
@@ -224,7 +225,8 @@ const FoodState = (props) => {
     }
 
     // Edit Address
-    const editAddress = async (house, societyname, landmark, city, pincode, place, id) => {
+    const editAddress = async (updatedAddressData, id) => {
+        console.log(updatedAddressData, id);
         try {
             const res = await fetch(`http://localhost:5000/updateaddress/${id}`, {
                 method: "PUT",
@@ -232,7 +234,7 @@ const FoodState = (props) => {
                     "Content-Type": "application/json",
                     "token": localStorage.getItem("token")
                 },
-                body: JSON.stringify({ house, societyname, landmark, city, pincode, place })
+                body: JSON.stringify(updatedAddressData)
             });
             const json = await res.json();
             if (res.status === 200 && json) {
@@ -240,12 +242,12 @@ const FoodState = (props) => {
                 for (let index = 0; index < newAddress.length; index++) {
                     const element = newAddress[index];
                     if (element._id === id) {
-                        newAddress[index].house = house;
-                        newAddress[index].societyname = societyname;
-                        newAddress[index].landmark = landmark;
-                        newAddress[index].city = city;
-                        newAddress[index].pincode = pincode;
-                        newAddress[index].place = place;
+                        newAddress[index].house = updatedAddressData.house;
+                        newAddress[index].societyname = updatedAddressData.societyname;
+                        newAddress[index].landmark = updatedAddressData.landmark;
+                        newAddress[index].city = updatedAddressData.city;
+                        newAddress[index].pincode = updatedAddressData.pincode;
+                        newAddress[index].place = updatedAddressData.place;
                         break;
                     }
                 }
@@ -263,7 +265,7 @@ const FoodState = (props) => {
     }
 
     // Edit profile
-    const editProfile = async (firstname, lastname, email, phone, age) => {
+    const editProfile = async (updatedUserData) => {
         try {
             const res = await fetch("http://localhost:5000/updateuser", {
                 method: "PUT",
@@ -271,7 +273,7 @@ const FoodState = (props) => {
                     "Content-Type": "application/json",
                     "token": localStorage.getItem("token")
                 },
-                body: JSON.stringify({ firstname, lastname, email, phone, age })
+                body: JSON.stringify(updatedUserData)
             });
             const json = await res.json();
             if (res.status === 200) {
@@ -286,30 +288,6 @@ const FoodState = (props) => {
         catch (error) {
             // console.log("Some error to update " + error);
             return false;
-        }
-    }
-
-    // Change password
-    const changePassword = async (password, confirmpassword) => {
-        try {
-            const res = await fetch(`http://localhost:5000/forgotpassword`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    "token": localStorage.getItem("token")
-                },
-                body: JSON.stringify({ password, confirmpassword })
-            });
-            const json = await res.json();
-            if (res.status === 200 && json) {
-                return json;
-            }
-            else {
-                return false;
-            }
-        }
-        catch (error) {
-            // console.log("Some error to chnage password", error);
         }
     }
 
@@ -360,8 +338,7 @@ const FoodState = (props) => {
     }
 
     // Order Food
-    const orderFood = async (newElement, orderAddress, finalamount) => {
-        let orderfood = false;
+    const orderFood = async (cart, oid, totalamount, finalamount, coupen, discountamount, deliverycharge, deliveryaddress, name, email, phone) => {
         try {
             const res = await fetch("http://localhost:5000/orderfood", {
                 method: "POST",
@@ -369,22 +346,19 @@ const FoodState = (props) => {
                     "Content-Type": "application/json",
                     "token": localStorage.getItem("token")
                 },
-                body: JSON.stringify({ newElement, orderAddress, finalamount })
+                body: JSON.stringify({ cart, oid, totalamount, finalamount, coupen, discountamount, deliverycharge, deliveryaddress, name, email, phone })
             });
             const json = await res.json();
             if (res.status === 200 && json) {
-                orderfood = true;
-                return orderfood;
+                return true;
             }
             else {
-                orderfood = false;
-                // console.log("Some error while take order");
-                return orderfood;
+                return false;
             }
         }
         catch (error) {
             // console.log("Some error to order food", error);
-            return orderfood;
+            return false;
         }
     }
 
@@ -465,7 +439,7 @@ const FoodState = (props) => {
         }
         setDiscountamount(disamount);
 
-        if (subTotal < 500) {
+        if (subTotal < 500 && subTotal > 0) {
             delicharge = 40;
         }
         setDeliverycharge(delicharge);
@@ -539,7 +513,7 @@ const FoodState = (props) => {
     }
 
     return (
-        <FoodContext.Provider value={{ saveCart, favcart, setCart, setFavcart, addToFavourite, removeFromFavourite, clearFavourite, addToCart, removeFromCart, clearCart, cart, totalamount, deliverycharge, discountamount, addresses, foodJson, getUserData, addAddress, getAddress, deleteAddress, editAddress, editProfile, changePassword, getFoodDetils, getFoodLocal, getFavFoodLocal, orderFood, getOrders, getFood, foodServe, state, foodDone, getOwnerData, restaurantFood, handleAddFood, handleUpdateFood, handleDeleteFood, getRestaurantFood }}>
+        <FoodContext.Provider value={{ saveCart, favcart, setCart, setFavcart, addToFavourite, removeFromFavourite, clearFavourite, addToCart, removeFromCart, clearCart, cart, totalamount, deliverycharge, discountamount, addresses, foodJson, getUserData, addAddress, getAddress, deleteAddress, editAddress, editProfile, getFoodDetils, getFoodLocal, getFavFoodLocal, orderFood, getOrders, getFood, foodServe, state, foodDone, getOwnerData, restaurantFood, handleAddFood, handleUpdateFood, handleDeleteFood, getRestaurantFood }}>
             {props.children}
         </FoodContext.Provider>
     )

@@ -5,8 +5,24 @@ const orderSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "customers"
     },
+    orderId: {
+        type: Number,
+        require: true
+    },
+    name: {
+        type: String,
+        require: true
+    },
+    email: {
+        type: String,
+        require: true
+    },
+    phone: {
+        type: Number,
+        require: true
+    },
     food: {
-        type: Array,
+        type: Object,
         require: true
     },
     deliveryaddress: {
@@ -14,14 +30,26 @@ const orderSchema = new mongoose.Schema({
         require: true
     },
     subtotal: {
-        type: String,
+        type: Number,
         require: true
     },
-    ordertime: {
-        type: Date,
-        default: Date.now
+    totalamount: {
+        type: Number,
+        require: true
+    },
+    coupenapplied: {
+        type: String,
+        default: ""
+    },
+    discount: {
+        type: Number,
+        default: ""
+    },
+    deliverycharge: {
+        type: Number,
+        default: ""
     }
-});
+}, { timestamps: true });
 
 const Orders = new mongoose.model("orders", orderSchema);
 

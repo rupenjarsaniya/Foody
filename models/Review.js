@@ -5,6 +5,10 @@ const reviewSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "customers"
     },
+    name: {
+        type: String,
+        require: true
+    },
     msg: {
         type: String,
         require: true
@@ -12,12 +16,8 @@ const reviewSchema = new mongoose.Schema({
     rating: {
         type: Number,
         default: 0
-    },
-    reviewtime: {
-        type: Date,
-        default: Date.now
     }
-});
+}, { timestamps: true });
 
 const Review = new mongoose.model("reviews", reviewSchema);
 

@@ -10,12 +10,13 @@ import Cart from './Components/customer/Cart';
 import Wishlist from './Components/customer/Wishlist';
 import Login from './Components/customer/Login';
 import Signup from './Components/customer/Signup';
-import Newpassword from './Components/customer/Newpassword';
 import Error from './Components/customer/Error';
 import Basket from './Components/customer/Basket';
 import FoodState from './context/foody/FoodState';
 import LoadingBar from 'react-top-loading-bar'
 import FoodManagement from './Components/restaurant/FoodManagement';
+import Forgotpassword from './Components/customer/Forgotpassword';
+import Changepassword from './Components/customer/Changepassword';
 
 function App() {
   const [loadingBar, setloadingBar] = useState(0);
@@ -48,8 +49,14 @@ function App() {
             <Route exact path="/wishlist">
               <Wishlist setloadingBar={setloadingBar} />
             </Route>
-            <Route exact path="/newpassword">
-              <Newpassword setloadingBar={setloadingBar} />
+            <Route exact path="/forgotpassword">
+              <Forgotpassword setloadingBar={setloadingBar} />
+            </Route>
+            <Route exact path="/forgotpassword/:token">
+              <Forgotpassword setloadingBar={setloadingBar} />
+            </Route>
+            <Route exact path="/changepassword">
+              <Changepassword setloadingBar={setloadingBar} />
             </Route>
             <Route exact path="/foodmanagement">
               <FoodManagement setloadingBar={setloadingBar} />
