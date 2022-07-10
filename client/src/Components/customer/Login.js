@@ -89,7 +89,7 @@ const Login = (props) => {
                                             }
                                         </div>
 
-                                        <p className="forgot"><Link to="/">Forgot Password?</Link></p>
+                                        <p className="forgot"><Link to="/forgotpassword">Forgot Password?</Link></p>
                                         <Button size="small" type="submit" variant="contained" className="btnsubmit">Login</Button>
                                         <p className="signup">New At Foody? <Link to="./signup">Signup Here!</Link></p>
                                     </form>

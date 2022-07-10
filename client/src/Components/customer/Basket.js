@@ -31,12 +31,10 @@ const Basket = () => {
                                     Object.keys(cart).length === 0 ? "Cart is Empty" :
                                         Object.keys(cart).map((basket) => {
                                             return (
-                                                <>
-                                                    <div className="cartBox" key={cart[basket]._id}>
-                                                        <div className="cartfoodname">{cart[basket].foodname}</div>
-                                                        <div>₹<span className="cartfoodprice">{cart[basket].price} X {cart[basket].qty}</span></div>
-                                                    </div>
-                                                </>
+                                                <div className="cartBox" key={cart[basket]._id}>
+                                                    <div className="cartfoodname">{cart[basket].foodname}</div>
+                                                    <div>₹<span className="cartfoodprice">{cart[basket].price} X {cart[basket].qty}</span></div>
+                                                </div>
                                             )
                                         })
                                 }

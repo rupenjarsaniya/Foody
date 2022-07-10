@@ -6,6 +6,7 @@ import CloseSharpIcon from '@material-ui/icons/CloseSharp';
 import swal from 'sweetalert';
 import Cartitems from './Cartitems';
 import { useSelector } from 'react-redux';
+import { logoutUser } from '../../actions';
 
 const Cart = (props) => {
     const history = useHistory();
@@ -97,14 +98,17 @@ const Cart = (props) => {
         }
         let oid = Math.floor(Math.random() * Date.now());
         let res = await orderFood(cart, oid, totalamount, finalamount, coupen, discountamount, deliverycharge, deliveryAddress, name, userdata.email, userdata.phone);
-        if (res) {
+
+        if (res == true) {
             swal("Confirm!", "Order Placed!", "success");
-            clearCart({});
-            setDeliveryAddress("");
+            // clearCart({});
+            // setDeliveryAddress("");
         }
         else {
             swal("Oops!", "Something went wrong", "error");
+            // clearCart();
         }
+
     }
 
     useEffect(() => {
@@ -161,7 +165,7 @@ const Cart = (props) => {
                                                     </div> : <> {
                                                         Object.keys(cart).map((item, index) => {
                                                             const element = cart[item];
-                                                            return <> <Cartitems key={index + 1} element={element} item={item} index={index + 1} addToFavourite={addToFavourite} removeFromCart={removeFromCart} addToCart={addToCart} /></>
+                                                            return <Cartitems key={index + 1} element={element} item={item} index={index + 1} addToFavourite={addToFavourite} removeFromCart={removeFromCart} addToCart={addToCart} />
                                                         })
                                                     }
                                                         <Button type="submit" variant="contained" className="btnplace" onClick={readyOrder}>place order</Button>

@@ -132,6 +132,7 @@ const Account = (props) => {
 
     // all
     const [orders, setOrders] = useState([]);
+
     useEffect(() => {
         const getUserDetailFun = async () => {
             if (localStorage.getItem("token")) {
@@ -184,6 +185,7 @@ const Account = (props) => {
                                     <div className="accordion" id="accordionPanelsStayOpenExample">
                                         {
                                             orders && orders.map(item => {
+                                                console.log(item)
                                                 return <>
                                                     <div className="order__container" key={item._id}>
                                                         <div className="order__orderstatusinfo">
@@ -200,7 +202,6 @@ const Account = (props) => {
                                                         </div>
                                                         <div className='order__detail'>
                                                             {
-                                                                // console.log(Object.keys(item.food))
                                                                 Object.keys(item.food).map((foodItem, index1) => {
                                                                     return <>
                                                                         <div className="order__detail__innercontainer" key={index1 + 1}>
@@ -261,7 +262,7 @@ const Account = (props) => {
                                                         <h6 className='review__header'>Feedbacks and Ratings</h6>
                                                         {
                                                             reviews && reviews.map((review) => {
-                                                                return <div className="reviewContent">
+                                                                return <div className="reviewContent" key={review._id}>
                                                                     <div className="review__info">
                                                                         <p className='review__username'>{review.name}</p>
                                                                         <p className="review__date">{new Date(review.createdAt).toLocaleDateString()}</p>

@@ -3,10 +3,11 @@ import FoodContext from './foodContext'
 import { getUser } from '../../actions/index';
 import { useDispatch } from 'react-redux';
 import axios from 'axios';
-import { TextareaAutosize } from '@material-ui/core';
+import { useHistory } from 'react-router-dom';
 
 const FoodState = (props) => {
     const dispatch = useDispatch();
+    const router = useHistory();
     const [addresses, setAddresses] = useState([]);
     const [foodJson, setFoodJson] = useState([]);
     const [foodServe, setFoodServe] = useState([]);
@@ -353,11 +354,10 @@ const FoodState = (props) => {
                 return true;
             }
             else {
-                return false;
+                return json;
             }
         }
         catch (error) {
-            // console.log("Some error to order food", error);
             return false;
         }
     }

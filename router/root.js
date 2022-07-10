@@ -14,6 +14,7 @@ const Otp = require("../models/Otp");
 const Forgot = require("../models/Forgot");
 const auth = require("../middleware/auth");
 const pincodes = require("../pincodes.json");
+const paypal = require('paypal-rest-sdk');
 
 
 const DIR = './public/';
@@ -338,22 +339,97 @@ router.delete("/deleteaddress/:id", auth, async (req, res) => {
 // Order food
 router.post("/orderfood", auth, async (req, res) => {
     const { cart, oid, totalamount, finalamount, coupen, discountamount, deliverycharge, deliveryaddress, name, email, phone } = req.body;
-    console.log(oid);
+
     try {
+        // Check if cart is tampered with (if tampered then order not placed in not then order placed)
+        let subtotal = 0;
+        for (let item in cart) {
+            const cartFood = await Food.findOne({ _id: item }).select({ price: 1 });
+            if (cartFood.price !== cart[item].price) return res.status(400).json({ error: "There is some changes in cart, try again!" });
+            subtotal += cart[item].price * cart[item].qty;
+        }
+        if (subtotal !== totalamount) return res.status(400).json({ error: "There is some changes in cart, try again!" });
+
+        //Order
         const createOrder = new Order({ food: cart, orderId: oid, totalamount, subtotal: finalamount, coupenapplied: coupen, discount: discountamount, deliverycharge, deliveryaddress, name, email, phone, user: req.userId });
         const storeOrder = await createOrder.save();
         if (!storeOrder) {
-            // console.log("Order not take");
-            return res.status(400).json({ erorr: "Order Not Take, Please Try Again" });
+            return res.status(400).json({ error: "Something went wrong, Please try again!" });
         }
-        // console.log(storeOrder);
-        return res.status(200).json({ success: "Order Placed" });
+
+        //payment
+        paypal.configure({
+            'mode': 'sandbox', //sandbox or live
+            'client_id': process.env.CLIENT_ID,
+            'client_secret': process.env.CLIENT_SECRET
+        });
+
+        const create_payment_json = {
+            "intent": "sale",
+            "payer": {
+                "payment_method": "paypal"
+            },
+            "redirect_urls": {
+                "return_url": "http://localhost:5000/postOrder",
+                "cancel_url": "http://localhost:5000/cancelpayment"
+            },
+            "transactions": [{
+                "amount": {
+                    "currency": "USD",
+                    "total": finalamount
+                },
+                "description": "Hat for the best team ever"
+            }]
+        };
+
+        paypal.payment.create(create_payment_json, function (error, payment) {
+            if (error) {
+                throw error;
+            } else {
+                for (let i = 0; i < payment.links.length; i++) {
+                    if (payment.links[i].rel === 'approval_url') {
+                        return res.status(200).json(payment.links[i].href);
+                    }
+                }
+            }
+        });
     }
     catch (error) {
-        console.log(error);
-        // console.log("Some error to store order", error);
-        return res.status(400).json({ error: "Some error to store order" });
+        return res.status(400).json({ error: "Something went wrong!" });
     }
+})
+
+router.get('/success', (req, res) => {
+    const payerId = req.query.PayerID;
+    const paymentId = req.query.paymentId;
+
+    const execute_payment_json = {
+        "payer_id": payerId,
+        "transactions": [{
+            "amount": {
+                "currency": "USD",
+                "total": "25.00"
+            }
+        }]
+    };
+
+    paypal.payment.execute(paymentId, execute_payment_json, function (error, payment) {
+        if (error) {
+            console.log(error.response);
+            throw error;
+        } else {
+            console.log(JSON.stringify(payment));
+            res.send('Success');
+        }
+    });
+});
+
+router.post("/postOrder", async (req, res) => {
+    console.log("post order called");
+})
+
+router.post("/cancelpayment", async (req, res) => {
+    console.log("post order called");
 })
 
 // Get order
@@ -425,7 +501,6 @@ router.post("/review", auth, async (req, res) => {
 router.get("/review", async (req, res) => {
     try {
         const reviews = await Review.find();
-        console.log(reviews);
         if (!reviews) return res.status(400).json("Some error to get reviews");
 
         return res.status(200).json(reviews);

@@ -94,12 +94,6 @@ const Forgotpassword = (props) => {
         }
     }, [history.location]);
 
-    useEffect(() => {
-        props.setloadingBar(50);
-        if (!localStorage.getItem("token")) history.push("/login");
-        props.setloadingBar(100);
-    }, []);
-
     return (
         <>
             <div id="login_content">
