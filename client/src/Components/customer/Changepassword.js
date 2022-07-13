@@ -6,7 +6,7 @@ import ChangePassValidate from '../../validation/ChangePassValidate';
 
 const Changepassword = () => {
     const handleChangePassword = async () => {
-        const res = await fetch("http://localhost:5000/changepassword", {
+        const res = await fetch("/changepassword", {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",

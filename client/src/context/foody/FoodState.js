@@ -22,7 +22,7 @@ const FoodState = (props) => {
     // Get Owner
     const getOwnerData = async () => {
         try {
-            const res = await fetch("http://localhost:5000/owner", {
+            const res = await fetch("/owner", {
                 method: "GET",
                 headers: {
                     Accept: "application/json",
@@ -47,7 +47,7 @@ const FoodState = (props) => {
 
     // Add Food
     const handleAddFood = async (newFood) => {
-        const res = await axios.post("http://localhost:5000/addfood", newFood, {
+        const res = await axios.post("/addfood", newFood, {
             headers: {
                 "Content-Type": "multipart/form-data",
                 "token": localStorage.getItem("token")
@@ -64,7 +64,7 @@ const FoodState = (props) => {
     // Update Food
     const handleUpdateFood = async (currFood, id) => {
         console.log(id);
-        const res = await axios.put(`http://localhost:5000/updatefood/${id}`, currFood, {
+        const res = await axios.put(`/updatefood/${id}`, currFood, {
             headers: {
                 "Content-Type": "multipart/form-data",
                 "token": localStorage.getItem("token")
@@ -90,7 +90,7 @@ const FoodState = (props) => {
 
     // Delete Food
     const handleDeleteFood = async (id) => {
-        const res = await fetch('http://localhost:5000/deletefood/' + id, {
+        const res = await fetch('/deletefood/' + id, {
             method: "DELETE",
             headers: {
                 "Content-Type": "application/json",
@@ -108,7 +108,7 @@ const FoodState = (props) => {
 
     const getRestaurantFood = async () => {
         try {
-            const res = await fetch('http://localhost:5000/getrestaurantfood', {
+            const res = await fetch('/getrestaurantfood', {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
@@ -129,7 +129,7 @@ const FoodState = (props) => {
     // Get User
     const getUserData = async () => {
         try {
-            const res = await fetch("http://localhost:5000/user", {
+            const res = await fetch("/user", {
                 method: "GET",
                 headers: {
                     Accept: "application/json",
@@ -155,7 +155,7 @@ const FoodState = (props) => {
     // Add Address
     const addAddress = async (newAddressData) => {
         try {
-            const res = await fetch("http://localhost:5000/addaddress", {
+            const res = await fetch("/addaddress", {
                 method: "POST",
                 headers: {
                     "Content-type": "application/json",
@@ -182,7 +182,7 @@ const FoodState = (props) => {
     // Get Address
     const getAddress = async () => {
         try {
-            const res = await fetch("http://localhost:5000/getaddress", {
+            const res = await fetch("/getaddress", {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
@@ -204,7 +204,7 @@ const FoodState = (props) => {
     // Delete Address
     const deleteAddress = async (id) => {
         try {
-            const res = await fetch(`http://localhost:5000/deleteaddress/${id}`, {
+            const res = await fetch(`/deleteaddress/${id}`, {
                 method: "DELETE",
                 headers: {
                     "Content-Type": "application/json",
@@ -229,7 +229,7 @@ const FoodState = (props) => {
     const editAddress = async (updatedAddressData, id) => {
         console.log(updatedAddressData, id);
         try {
-            const res = await fetch(`http://localhost:5000/updateaddress/${id}`, {
+            const res = await fetch(`/updateaddress/${id}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -268,7 +268,7 @@ const FoodState = (props) => {
     // Edit profile
     const editProfile = async (updatedUserData) => {
         try {
-            const res = await fetch("http://localhost:5000/updateuser", {
+            const res = await fetch("/updateuser", {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -295,7 +295,7 @@ const FoodState = (props) => {
     // Get fooddetails
     const getFoodDetils = async () => {
         try {
-            const res = await fetch("http://localhost:5000http://localhost:8000/foodDetailsJson", {
+            const res = await fetch("http://localhost:8000/foodDetailsJson", {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
@@ -341,7 +341,7 @@ const FoodState = (props) => {
     // Order Food
     const orderFood = async (cart, oid, totalamount, finalamount, coupen, discountamount, deliverycharge, deliveryaddress, name, email, phone) => {
         try {
-            const res = await fetch("http://localhost:5000/orderfood", {
+            const res = await fetch("/orderfood", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -351,7 +351,7 @@ const FoodState = (props) => {
             });
             const json = await res.json();
             if (res.status === 200 && json) {
-                return true;
+                return json;
             }
             else {
                 return json;
@@ -365,7 +365,7 @@ const FoodState = (props) => {
     // Get user order
     const getOrders = async () => {
         try {
-            const res = await fetch("http://localhost:5000/getorder", {
+            const res = await fetch("/getorder", {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
@@ -385,7 +385,7 @@ const FoodState = (props) => {
     // Get food detail by city name
     const getFood = async () => {
         try {
-            const res = await fetch("http://localhost:5000/getFood", {
+            const res = await fetch("/getFood", {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json"

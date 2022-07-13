@@ -2,6 +2,8 @@ const express = require("express");
 const bcryptjs = require("bcrypt");
 const multer = require("multer");
 const otpGenerator = require("otp-generator");
+const https = require('https');
+const PaytmChecksum = require('paytmchecksum');
 const router = express.Router();
 
 const Customer = require("../models/Customer");
@@ -14,7 +16,6 @@ const Otp = require("../models/Otp");
 const Forgot = require("../models/Forgot");
 const auth = require("../middleware/auth");
 const pincodes = require("../pincodes.json");
-const paypal = require('paypal-rest-sdk');
 
 
 const DIR = './public/';
@@ -345,87 +346,104 @@ router.post("/orderfood", auth, async (req, res) => {
         let subtotal = 0;
         for (let item in cart) {
             const cartFood = await Food.findOne({ _id: item }).select({ price: 1 });
-            if (cartFood.price !== cart[item].price) return res.status(400).json({ error: "There is some changes in cart, try again!" });
+            if (cartFood.price !== cart[item].price) return res.status(400).json({ success: false, error: "There is some changes in cart, try again!" });
             subtotal += cart[item].price * cart[item].qty;
         }
-        if (subtotal !== totalamount) return res.status(400).json({ error: "There is some changes in cart, try again!" });
+        if (subtotal !== totalamount) return res.status(400).json({ success: false, error: "There is some changes in cart, try again!" });
 
         //Order
         const createOrder = new Order({ food: cart, orderId: oid, totalamount, subtotal: finalamount, coupenapplied: coupen, discount: discountamount, deliverycharge, deliveryaddress, name, email, phone, user: req.userId });
         const storeOrder = await createOrder.save();
         if (!storeOrder) {
-            return res.status(400).json({ error: "Something went wrong, Please try again!" });
+            return res.status(400).json({ success: false, error: "Something went wrong, Please try again!" });
         }
 
-        //payment
-        paypal.configure({
-            'mode': 'sandbox', //sandbox or live
-            'client_id': process.env.CLIENT_ID,
-            'client_secret': process.env.CLIENT_SECRET
-        });
+        //Payment
+        var paytmParams = {};
 
-        const create_payment_json = {
-            "intent": "sale",
-            "payer": {
-                "payment_method": "paypal"
+        paytmParams.body = {
+            "requestType": "Payment",
+            "mid": process.env.PAYTM_MID,
+            "websiteName": "WEBSTAGING",
+            "orderId": oid,
+            "callbackUrl": "http://localhost:5000/postOrder",
+            "txnAmount": {
+                "value": finalamount,
+                "currency": "INR",
             },
-            "redirect_urls": {
-                "return_url": "http://localhost:5000/postOrder",
-                "cancel_url": "http://localhost:5000/cancelpayment"
+            "userInfo": {
+                "custId": email,
             },
-            "transactions": [{
-                "amount": {
-                    "currency": "USD",
-                    "total": finalamount
-                },
-                "description": "Hat for the best team ever"
-            }]
         };
 
-        paypal.payment.create(create_payment_json, function (error, payment) {
-            if (error) {
-                throw error;
-            } else {
-                for (let i = 0; i < payment.links.length; i++) {
-                    if (payment.links[i].rel === 'approval_url') {
-                        return res.status(200).json(payment.links[i].href);
-                    }
+        PaytmChecksum.generateSignature(JSON.stringify(paytmParams.body), process.env.PAYTM_MKEY).then(function (checksum) {
+
+            paytmParams.head = {
+                "signature": checksum
+            };
+
+            var post_data = JSON.stringify(paytmParams);
+
+            var options = {
+
+                /* for Staging */
+                hostname: 'securegw-stage.paytm.in',
+
+                /* for Production */
+                // hostname: 'securegw.paytm.in',
+
+                port: 443,
+                path: `/theia/api/v1/initiateTransaction?mid=${process.env.PAYTM_MID}&orderId=${oid}`,
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Content-Length': post_data.length
                 }
-            }
+            };
+
+            var response = "";
+            var post_req = https.request(options, function (post_res) {
+                post_res.on('data', function (chunk) {
+                    response += chunk;
+                });
+
+                post_res.on('end', function () {
+                    return res.status(200).json({ success: true, data: JSON.parse(response).body });
+                });
+            });
+
+            post_req.write(post_data);
+            post_req.end();
         });
+
     }
     catch (error) {
+        console.log(error);
         return res.status(400).json({ error: "Something went wrong!" });
     }
 })
 
-router.get('/success', (req, res) => {
-    const payerId = req.query.PayerID;
-    const paymentId = req.query.paymentId;
-
-    const execute_payment_json = {
-        "payer_id": payerId,
-        "transactions": [{
-            "amount": {
-                "currency": "USD",
-                "total": "25.00"
-            }
-        }]
-    };
-
-    paypal.payment.execute(paymentId, execute_payment_json, function (error, payment) {
-        if (error) {
-            console.log(error.response);
-            throw error;
-        } else {
-            console.log(JSON.stringify(payment));
-            res.send('Success');
-        }
-    });
-});
-
 router.post("/postOrder", async (req, res) => {
-    console.log("post order called");
+    var paytmChecksum = "";
+    var paytmParams = {};
+    const received_data = req.body;
+    for (let key in received_data) {
+        if (key === 'CHECKSUMHASH') {
+            paytmChecksum = received_data[key];
+        }
+        else {
+            paytmChecksum[key] = received_data[key];
+        }
+    }
+    var isValidChecksum = PaytmChecksum.verifySignature(paytmParams, process.env.PAYTM_MKEY, paytmChecksum);
+
+    if (received_data.STATUS === "TXN_SUCCESS") {
+        const orderUpdate = await Order.findOneAndUpdate({ orderId: received_data.ORDERID }, { status: "Paid" });
+        if (orderUpdate) {
+            return res.status(200).redirect('/account');
+        }
+    }
+    return res.status(200).redirect('/cart');
 })
 
 router.post("/cancelpayment", async (req, res) => {

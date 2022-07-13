@@ -22,7 +22,7 @@ const Forgotpassword = (props) => {
     // Send Otp
     const sendOtp = async (e) => {
         e.preventDefault();
-        const res = await fetch("http://localhost:5000/sendotp", {
+        const res = await fetch("/sendotp", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -42,7 +42,7 @@ const Forgotpassword = (props) => {
     const sendLink = async (e) => {
         e.preventDefault();
         const data = { canSendEmail: true, email, otp }
-        const res = await fetch("http://localhost:5000/forgotpassword", {
+        const res = await fetch("/forgotpassword", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -64,7 +64,7 @@ const Forgotpassword = (props) => {
         // const data = { canSendEmail: false, email, password: passwords.password, confirmpassword: passwords.confirmpassword }
         values.canSendEmail = false;
         values.email = email;
-        const res = await fetch("http://localhost:5000/forgotpassword", {
+        const res = await fetch("/forgotpassword", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

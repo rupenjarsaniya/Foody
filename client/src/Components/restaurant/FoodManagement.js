@@ -105,7 +105,7 @@ const FoodManagement = (props) => {
 
     const handleProfileUpdate = async (e) => {
         e.preventDefault();
-        const res = await fetch('http://localhost:5000/editowner', {
+        const res = await fetch('/editowner', {
             method: "PUT",
             headers: {
                 "Content-type": "application/json",

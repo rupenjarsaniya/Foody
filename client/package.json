@@ -16,6 +16,7 @@
     "react-router-dom": "^5.2.0",
     "react-scripts": "5.0.0",
     "react-star-ratings": "^2.3.0",
+    "react-stripe-checkout": "^2.6.3",
     "react-top-loading-bar": "^2.1.0",
     "redux": "^4.1.2",
     "sweetalert": "^2.1.2",

@@ -28,7 +28,7 @@ const Signup = (props) => {
     const sendNewUserData = async () => {
         props.setloadingBar(10);
         try {
-            const res = await fetch("http://localhost:5000/signup/" + usertype, {
+            const res = await fetch("/signup/" + usertype, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(values)

@@ -17,7 +17,7 @@ const Login = (props) => {
     const exitUserData = async () => {
         props.setloadingBar(50);
         try {
-            const res = await fetch("http://localhost:5000/login/" + usertype, {
+            const res = await fetch("/login/" + usertype, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(values)

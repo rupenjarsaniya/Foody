@@ -70,7 +70,7 @@ const Cart = (props) => {
 
     // Pincode
     const getPincodes = async () => {
-        const res = await fetch("http://localhost:5000/pincodes", {
+        const res = await fetch("/pincodes", {
             method: "GET",
             headers: {
                 "Content-Type": "application/json"
@@ -99,14 +99,43 @@ const Cart = (props) => {
         let oid = Math.floor(Math.random() * Date.now());
         let res = await orderFood(cart, oid, totalamount, finalamount, coupen, discountamount, deliverycharge, deliveryAddress, name, userdata.email, userdata.phone);
 
-        if (res == true) {
-            swal("Confirm!", "Order Placed!", "success");
-            // clearCart({});
-            // setDeliveryAddress("");
+        if (res.success == true) {
+            const txnToken = res.data.txnToken;
+
+            var config = {
+                "root": "",
+                "flow": "DEFAULT",
+                "data": {
+                    "orderId": oid,
+                    "token": txnToken,
+                    "tokenType": "TXN_TOKEN",
+                    "amount": finalamount
+                },
+                "handler": {
+                    "notifyMerchant": function (eventName, data) {
+                        console.log("notifyMerchant handler function called");
+                        console.log("eventName => ", eventName);
+                        console.log("data => ", data);
+                    }
+                }
+            };
+
+            if (window.Paytm && window.Paytm.CheckoutJS) {
+                window.Paytm.CheckoutJS.init(config)
+                    .then(function onSuccess() {
+                        window.Paytm.CheckoutJS.invoke();
+                    })
+                    .catch(function onError(error) {
+                        console.log("error => ", error);
+                    });
+            }
+
+            clearCart({});
+            setDeliveryAddress("");
         }
         else {
-            swal("Oops!", "Something went wrong", "error");
-            // clearCart();
+            swal("Oops!", res.error, "error");
+            clearCart();
         }
 
     }

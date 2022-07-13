@@ -48,6 +48,10 @@ const orderSchema = new mongoose.Schema({
     deliverycharge: {
         type: Number,
         default: ""
+    },
+    status: {
+        type: String,
+        default: "Pending"
     }
 }, { timestamps: true });
 

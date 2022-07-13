@@ -91,7 +91,7 @@ const Account = (props) => {
         try {
             e.preventDefault();
             const reviewObj = { rating, msg, name: userdata.firstname + " " + userdata.lastname };
-            const res = await fetch("http://localhost:5000/review", {
+            const res = await fetch("/review", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -115,7 +115,7 @@ const Account = (props) => {
 
     const getReviews = async () => {
         try {
-            const res = await fetch("http://localhost:5000/review", {
+            const res = await fetch("/review", {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
@@ -190,7 +190,7 @@ const Account = (props) => {
                                                     <div className="order__container" key={item._id}>
                                                         <div className="order__orderstatusinfo">
                                                             <div className="order__status">
-                                                                <p className='order__id'>Order status</p>
+                                                                <p className='order__id'>Order status ({item.status})</p>
                                                                 <p className='order__totalitems'>Order Total ({Object.keys(item.food).length} items)</p>
                                                             </div>
                                                         </div>
